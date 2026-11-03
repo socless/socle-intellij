@@ -27,6 +27,8 @@
         <notificationGroup id="Socle" displayType="BALLOON"/>
         <fileEditorProvider implementation="socle.intellij.panel.SocleTabEditorProvider"/>
         <postStartupActivity implementation="socle.intellij.SocleStartup"/>
+        <toolWindow id="Socle" anchor="left" icon="/icons/socleToolWindow.svg"
+                    factoryClass="socle.intellij.toolwindow.SocleToolWindowFactory"/>
         <codeInsight.lineMarkerProvider language="Scala" implementationClass="socle.intellij.actions.SocleLineMarkerProvider"/>
         <applicationConfigurable parentId="tools" id="socle.settings" displayName="Socle"
                                  instance="socle.intellij.settings.SocleConfigurable"/>
