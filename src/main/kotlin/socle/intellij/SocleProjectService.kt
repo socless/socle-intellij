@@ -23,13 +23,16 @@ class SocleProjectService(private val project: Project) : Disposable {
     @Volatile var client: socle.intellij.lsp.SocleClient? = null
     val tracker = SidebarModel.RunTracker()
     private val restarts = RestartBudget(3, 3 * 60 * 1000L)
-    private var started = false
 
-    /** Whether the server may start now: the first start always, later ones within the restart budget. */
+    /**
+     * The server process stopped without being asked to: whether to start it again (at most 3 times in
+     * 3 minutes, as in VS Code); past that the problem is reported. Starts the user asks for are not counted.
+     */
     @Synchronized
-    fun allowStart(nowMs: Long): Boolean {
-        if (!started) { started = true; return true }
-        return restarts.allow(nowMs)
+    fun onUnexpectedStop(nowMs: Long): Boolean {
+        val ok = restarts.allow(nowMs)
+        if (!ok) reportProblem(STOPPED)
+        return ok
     }
 
     init {
@@ -111,6 +114,8 @@ class SocleProjectService(private val project: Project) : Disposable {
 
     companion object {
         const val SERVER_ID = "socle"
+        const val STOPPED = "The Socle language server stopped 3 times in 3 minutes and will not be restarted. " +
+            "Restart it from the Language Servers view to try again."
         const val VIEW_DESIGN = "socle.viewDesign"
         const val SIMULATE = "socle.simulate"
 

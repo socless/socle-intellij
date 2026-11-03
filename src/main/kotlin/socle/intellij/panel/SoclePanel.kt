@@ -72,14 +72,19 @@ class SoclePanel(private val project: Project) : Disposable {
         return true
     }
 
+    /** The tab `f` shows this view (one IntelliJ may have reopened itself): closing it closes the view. */
+    fun adopt(f: SocleTabFile) { file = f }
+
     /** Called by the editor provider when the tab is created. */
     fun browserFor(f: SocleTabFile): RelayBrowser {
+        adopt(f)
         browser?.let { return it }
         val d = Disposer.newDisposable(this, "Socle panel tab")
         tabDisposable = d
         return RelayBrowser(d, currentThemeKind(), Logic::panelFrameUrl, ::onUiMessage).also { b ->
             browser = b
-            wantedUrl?.let { b.router.show(it) }
+            // A tab IntelliJ reopened by itself has no wanted URL: the server's last one.
+            (wantedUrl ?: SocleProjectService.getInstance(project).panelUrl)?.let { b.router.show(it) }
         }
     }
 
