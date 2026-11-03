@@ -18,6 +18,7 @@ class SocleStartup : ProjectActivity {
         val service = SocleProjectService.getInstance(project)
         // Services that listen for the server's events from their constructor must exist before the first event.
         socle.intellij.panel.SoclePanel.getInstance(project)
+        socle.intellij.panel.SurferTab.getInstance(project)
         val alarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, service)
         EditorFactory.getInstance().eventMulticaster.addCaretListener(object : CaretListener {
             override fun caretPositionChanged(event: CaretEvent) {

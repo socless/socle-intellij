@@ -7,7 +7,10 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.DumbAware
+import socle.intellij.Logic
 import socle.intellij.SocleProjectService
+import socle.intellij.panel.SurferTab
+import socle.intellij.settings.SocleSettings
 import socle.intellij.panel.SoclePanel
 import socle.intellij.settings.SocleConfigurable
 
@@ -32,6 +35,23 @@ class ShowPanelAction : SocleProjectAction() {
 
     companion object {
         const val NO_DESIGN = "Socle: no design yet. Use View design on a ChiselSim test first."
+    }
+}
+
+/** Brings the panel forward (its UI drives the Surfer tab), then opens the Surfer tab: once a Simulate gave it a trace. */
+class ShowWavesAction : SocleProjectAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val project = e.project ?: return
+        val surfer = SurferTab.getInstance(project)
+        val hasTrace = surfer.traced && SocleProjectService.getInstance(project).panelUrl != null
+        val problem = Logic.showWavesProblem(SocleSettings.getInstance().state.waveViewer, hasTrace)
+        if (problem != null) {
+            NotificationGroupManager.getInstance().getNotificationGroup("Socle")
+                .createNotification(problem, NotificationType.INFORMATION).notify(project)
+            return
+        }
+        SoclePanel.getInstance(project).showLast()
+        surfer.open(null)
     }
 }
 

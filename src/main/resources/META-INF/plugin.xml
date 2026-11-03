@@ -39,6 +39,8 @@
             <add-to-group group-id="ToolsMenu" anchor="last"/>
             <action id="socle.showPanel" class="socle.intellij.actions.ShowPanelAction" text="Show Design Panel"
                     description="Show the Socle design panel on the last design"/>
+            <action id="socle.showWaves" class="socle.intellij.actions.ShowWavesAction" text="Show Waveforms"
+                    description="Show the last Simulate's waveforms in the Surfer tab (surfer-panel viewer)"/>
             <action id="socle.refreshTests" class="socle.intellij.actions.RefreshTestsAction" text="Refresh Tests"
                     description="Ask the Socle server for the project's ChiselSim tests again"/>
             <action id="socle.openSettings" class="socle.intellij.actions.OpenSettingsAction" text="Settings..."

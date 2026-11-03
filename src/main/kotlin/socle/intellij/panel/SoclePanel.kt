@@ -62,6 +62,7 @@ class SoclePanel(private val project: Project) : Disposable {
         }
         wantedUrl = url
         browser?.router?.show(url)
+        SurferTab.getInstance(project).retarget(url) // a restarted server: the Surfer tab follows it
     }
 
     /** Shows the panel on the server's last URL; false when there is none. */
