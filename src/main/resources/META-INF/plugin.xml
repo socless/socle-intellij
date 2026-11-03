@@ -9,9 +9,11 @@
     of the selection.
     ]]></description>
 
-    <depends>com.intellij.modules.platform</depends>
-    <depends>org.intellij.scala</depends>
+    <!-- LSP4IJ first, and no classloader dependency on the Scala plugin: it bundles its own lsp4j-jsonrpc,
+         and Socle must see LSP4IJ's copy or the server proxy cannot be built. Socle needs the Scala
+         plugin installed (for the Scala language), not its classes. -->
     <depends>com.redhat.devtools.lsp4ij</depends>
+    <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.jcef</depends>
 
     <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">

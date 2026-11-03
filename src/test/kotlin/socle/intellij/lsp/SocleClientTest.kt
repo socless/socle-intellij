@@ -9,6 +9,16 @@ import socle.intellij.SocleProjectService
 class SocleClientTest : BasePlatformTestCase() {
     private fun obj(s: String) = JsonParser.parseString(s).asJsonObject
 
+    override fun tearDown() {
+        try {
+            // openPanel opens the panel tab (SoclePanel listens): close it.
+            com.intellij.util.ui.UIUtil.dispatchAllInvocationEvents()
+            com.intellij.openapi.fileEditor.ex.FileEditorManagerEx.getInstanceEx(project).closeAllFiles()
+        } finally {
+            super.tearDown()
+        }
+    }
+
     fun testOpenPanelPublishesAndRemembersTheUrl() {
         var got: Pair<String, String?>? = null
         project.messageBus.connect(testRootDisposable).subscribe(SocleEvents.TOPIC, object : SocleEvents {

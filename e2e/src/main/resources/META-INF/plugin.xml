@@ -1,0 +1,11 @@
+<idea-plugin>
+    <id>socless.socle.e2e</id>
+    <name>Socle e2e driver</name>
+    <vendor>socless</vendor>
+    <description>Test-only: drives Socle in a real IDE for e2e/run.sh. Does nothing unless SOCLE_E2E_OUT is set.</description>
+    <depends>com.intellij.modules.platform</depends>
+    <depends>socless.socle</depends>
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="socle.e2e.E2eDriver"/>
+    </extensions>
+</idea-plugin>

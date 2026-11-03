@@ -5,6 +5,7 @@ import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
@@ -23,6 +24,9 @@ class SoclePanel(private val project: Project) : Disposable {
     private var file: SocleTabFile? = null
     private var browser: RelayBrowser? = null
     private var tabDisposable: Disposable? = null
+
+    /** The URL to show: the browser may be created after [show] (editors open asynchronously), and loads it then. */
+    private var wantedUrl: String? = null
 
     init {
         val bus = project.messageBus.connect(this)
@@ -43,6 +47,7 @@ class SoclePanel(private val project: Project) : Disposable {
     /** Shows the panel on `url` (opening it beside the editor, or bringing it forward), titled after `test`. */
     fun show(url: String, test: String?) {
         val title = Logic.panelTitle(test ?: SocleProjectService.getInstance(project).lastTest)
+        thisLogger().info("Socle panel: show $url (open=${browser != null})")
         val manager = FileEditorManagerEx.getInstanceEx(project)
         val f = file
         if (f == null || !manager.isFileOpen(f)) {
@@ -55,6 +60,7 @@ class SoclePanel(private val project: Project) : Disposable {
             manager.updateFilePresentation(f)
             manager.openFile(f, false)
         }
+        wantedUrl = url
         browser?.router?.show(url)
     }
 
@@ -70,10 +76,14 @@ class SoclePanel(private val project: Project) : Disposable {
         browser?.let { return it }
         val d = Disposer.newDisposable(this, "Socle panel tab")
         tabDisposable = d
-        return RelayBrowser(d, currentThemeKind(), Logic::panelFrameUrl, ::onUiMessage).also { browser = it }
+        return RelayBrowser(d, currentThemeKind(), Logic::panelFrameUrl, ::onUiMessage).also { b ->
+            browser = b
+            wantedUrl?.let { b.router.show(it) }
+        }
     }
 
     private fun onUiMessage(msg: JsonObject) {
+        thisLogger().debug("Socle panel: UI message ${Logic.msgType(msg)}")
         if (Logic.msgType(msg) == "socle-state") {
             SidebarModel.parseUiState(msg)?.let { project.messageBus.syncPublisher(SocleEvents.TOPIC).uiState(it) }
         } else {

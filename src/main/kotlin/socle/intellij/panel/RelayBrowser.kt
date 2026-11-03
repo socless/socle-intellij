@@ -3,6 +3,7 @@ package socle.intellij.panel
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefJSQuery
@@ -34,13 +35,13 @@ class RelayBrowser(
     frameUrl: (String, String) -> String,
     private val onMessage: (JsonObject) -> Unit,
 ) : Disposable {
-    private val browser = JBCefBrowser.createBuilder().build()
+    private val browser = JBCefBrowser.createBuilder().setCreateImmediately(true).build()
     private val query = JBCefJSQuery.create(browser as com.intellij.ui.jcef.JBCefBrowserBase)
 
     val router = RelayRouter(
         theme,
         query.inject("s"),
-        load = { url -> browser.loadURL(url) },
+        load = { url -> LOG.info("Socle relay: load $url"); browser.loadURL(url) },
         post = { json -> browser.cefBrowser.executeJavaScript("window.socleFromHost && window.socleFromHost(${JsonPrimitive(json)});", browser.cefBrowser.url, 0) },
         frameUrl = frameUrl,
     )
@@ -52,6 +53,7 @@ class RelayBrowser(
         Disposer.register(this, browser)
         Disposer.register(this, query)
         query.addHandler { json ->
+            LOG.debug("Socle relay: from UI ${json.take(120)}")
             router.onUiMessage(json)?.let(onMessage)
             null
         }
@@ -60,11 +62,21 @@ class RelayBrowser(
                 b: CefBrowser?, frame: CefFrame?, request: CefRequest, isNavigation: Boolean, isDownload: Boolean,
                 initiator: String?, disableDefault: BoolRef?,
             ): CefResourceRequestHandler? {
+                LOG.debug("Socle relay: request ${request.url} navigation=$isNavigation")
                 if (!router.handles(request.url)) return null
                 val page = router.page() ?: return null
+                LOG.info("Socle relay: serving ${request.url}")
                 return object : CefResourceRequestHandlerAdapter() {
                     override fun getResourceHandler(b: CefBrowser?, f: CefFrame?, r: CefRequest?): CefResourceHandler = HtmlResource(page)
                 }
+            }
+        }, browser.cefBrowser)
+        browser.jbCefClient.addLoadHandler(object : org.cef.handler.CefLoadHandlerAdapter() {
+            override fun onLoadEnd(b: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
+                LOG.debug("Socle relay: loaded ${frame?.url} status=$httpStatusCode main=${frame?.isMain}")
+            }
+            override fun onLoadError(b: CefBrowser?, frame: CefFrame?, errorCode: org.cef.handler.CefLoadHandler.ErrorCode?, errorText: String?, failedUrl: String?) {
+                LOG.info("Socle relay: load error $errorCode $errorText $failedUrl")
             }
         }, browser.cefBrowser)
     }
@@ -99,6 +111,8 @@ class RelayBrowser(
     }
 
     companion object {
+        private val LOG = logger<RelayBrowser>()
+
         /** Whether a URL is a relay page URL (any port). */
         fun isRelay(url: String): Boolean = url.endsWith(Logic.RELAY_PATH)
     }

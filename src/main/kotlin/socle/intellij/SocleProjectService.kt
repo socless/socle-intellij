@@ -22,7 +22,15 @@ class SocleProjectService(private val project: Project) : Disposable {
     /** The running server's client, for configuration pushes. */
     @Volatile var client: socle.intellij.lsp.SocleClient? = null
     val tracker = SidebarModel.RunTracker()
-    val restarts = RestartBudget(3, 3 * 60 * 1000L)
+    private val restarts = RestartBudget(3, 3 * 60 * 1000L)
+    private var started = false
+
+    /** Whether the server may start now: the first start always, later ones within the restart budget. */
+    @Synchronized
+    fun allowStart(nowMs: Long): Boolean {
+        if (!started) { started = true; return true }
+        return restarts.allow(nowMs)
+    }
 
     init {
         project.messageBus.connect(this).subscribe(SocleEvents.TOPIC, object : SocleEvents {

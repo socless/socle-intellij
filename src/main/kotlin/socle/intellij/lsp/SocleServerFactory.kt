@@ -3,14 +3,11 @@ package socle.intellij.lsp
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.ide.trustedProjects.TrustedProjects
-import com.intellij.notification.NotificationGroupManager
-import com.intellij.notification.NotificationType
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.jcef.JBCefApp
 import com.redhat.devtools.lsp4ij.LanguageServerFactory
-import com.redhat.devtools.lsp4ij.LanguageServerManager
 import com.redhat.devtools.lsp4ij.client.LanguageClientImpl
 import com.redhat.devtools.lsp4ij.client.features.LSPClientFeatures
 import com.redhat.devtools.lsp4ij.client.features.LSPCodeLensFeature
@@ -38,20 +35,17 @@ class SocleServerFactory : LanguageServerFactory {
             service.reportProblem(problem)
             return Refused(problem)
         }
+        // The first start is free; each later start in 3 minutes takes from the restart budget (3).
+        if (!service.allowStart(System.currentTimeMillis())) {
+            val stopped = "The Socle language server stopped 3 times in 3 minutes and will not be restarted. " +
+                "Restart it from the Language Servers view to try again."
+            service.reportProblem(stopped)
+            return Refused(stopped)
+        }
         val jar = Logic.serverJar(settings.serverJar, bundledJar())
         val cmd = GeneralCommandLine(listOf(java) + Logic.serverArgs(jar))
         project.basePath?.let { cmd.withWorkDirectory(it) }
-        return OSProcessStreamConnectionProvider(cmd).apply {
-            addUnexpectedServerStopHandler {
-                if (service.restarts.allow(System.currentTimeMillis())) {
-                    LanguageServerManager.getInstance(project).start(SocleProjectService.SERVER_ID)
-                } else {
-                    NotificationGroupManager.getInstance().getNotificationGroup("Socle").createNotification(
-                        "The Socle language server stopped 3 times in 3 minutes and will not be restarted. " +
-                            "Restart it from the Language Servers view to try again.", NotificationType.ERROR).notify(project)
-                }
-            }
-        }
+        return OSProcessStreamConnectionProvider(cmd)
     }
 
     override fun createLanguageClient(project: Project): LanguageClientImpl = SocleClient(project)

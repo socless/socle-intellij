@@ -15,3 +15,4 @@ dependencyResolutionManagement {
         }
     }
 }
+include("e2e")
