@@ -1,0 +1,15 @@
+<idea-plugin>
+    <id>socless.socle</id>
+    <name>Socle (Chisel)</name>
+    <vendor url="https://github.com/socless/socle">socless</vendor>
+    <description><![CDATA[
+    Chisel IDE support: a View design action on each ChiselSim test opens the elaborated design in a
+    panel beside the editor, and the schematic follows your cursor. The Socle tool window lists the
+    project's tests (View design and Simulate on each), the design's instance hierarchy and the details
+    of the selection.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>org.intellij.scala</depends>
+    <depends>com.redhat.devtools.lsp4ij</depends>
+</idea-plugin>

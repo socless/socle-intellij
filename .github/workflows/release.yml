@@ -1,0 +1,51 @@
+name: Release
+
+# A pushed `v*` tag checks the version and the release notes, builds the plugin
+# zip (bundling the pinned Socle server) and publishes it as a GitHub release.
+# No JetBrains Marketplace publishing for now. A manual dispatch only checks and
+# builds.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write  # the GitHub release
+
+jobs:
+  release:
+    name: Check, build and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Version and release notes
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ver=$(grep -oP '^pluginVersion\s*=\s*\K\S+' gradle.properties)
+          if [ "$REF_TYPE" = tag ] && [ "${TAG#v}" != "$ver" ]; then
+            echo "::error::tag $TAG does not match pluginVersion = $ver in gradle.properties"; exit 1
+          fi
+          if [ "$REF_TYPE" = tag ]; then tools/release/notes.sh "$ver" > notes.md; fi
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Build the plugin zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./gradlew buildPlugin
+
+      - name: Publish
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then echo "release $TAG exists"; exit 0; fi
+          gh release create "$TAG" build/distributions/*.zip --title "Socle for IntelliJ ${TAG#v}" --notes-file notes.md
