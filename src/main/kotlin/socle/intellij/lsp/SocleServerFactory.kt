@@ -1,9 +1,8 @@
 package socle.intellij.lsp
 
 import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.openapi.application.PathManager
 import com.intellij.ide.trustedProjects.TrustedProjects
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.jcef.JBCefApp
@@ -60,9 +59,9 @@ class SocleServerFactory : LanguageServerFactory {
     }
 
     companion object {
-        /** The jar inside the installed plugin: `<plugin>/server/socle-lsp.jar`. */
+        /** The jar inside the installed plugin: `<plugin>/server/socle-lsp.jar`, beside the plugin's `lib/` that holds this class. */
         fun bundledJar(): Path =
-            PluginManagerCore.getPlugin(PluginId.getId("socless.socle"))!!.pluginPath.resolve("server").resolve("socle-lsp.jar")
+            PathManager.getJarForClass(SocleServerFactory::class.java)!!.parent.parent.resolve("server").resolve("socle-lsp.jar")
 
         /** Runs `<java> -version` (10 s at most): its major version, or null when it cannot run. */
         fun javaMajor(java: String): Int? = try {

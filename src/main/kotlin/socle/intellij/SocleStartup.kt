@@ -35,7 +35,7 @@ class SocleStartup : ProjectActivity {
         // The gutter icons come from the server's test list: redraw them when it changes.
         project.messageBus.connect(service).subscribe(SocleEvents.TOPIC, object : SocleEvents {
             override fun suitesUpdated(suites: List<SidebarModel.SuiteInfo>) {
-                DaemonCodeAnalyzer.getInstance(project).restart()
+                DaemonCodeAnalyzer.getInstance(project).restart("Socle tests changed")
             }
         })
         ApplicationManager.getApplication().messageBus.connect(service).subscribe(SocleSettingsListener.TOPIC,

@@ -24,3 +24,6 @@ intellijPlatform {
         ideaVersion { sinceBuild = "262"; untilBuild = provider { null } }
     }
 }
+
+// Never shipped: no plugin verifier run.
+tasks.verifyPlugin { enabled = false }
