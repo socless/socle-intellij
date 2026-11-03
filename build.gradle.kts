@@ -21,6 +21,7 @@ dependencies {
         intellijIdeaCommunity(providers.gradleProperty("platformVersion")) { useInstaller = false }
         plugin("org.intellij.scala", providers.gradleProperty("scalaPluginVersion").get())
         plugin("com.redhat.devtools.lsp4ij", providers.gradleProperty("lsp4ijVersion").get())
+        bundledPlugin("com.intellij.modules.jcef")
         testFramework(TestFrameworkType.Platform)
     }
     testImplementation("junit:junit:4.13.2")

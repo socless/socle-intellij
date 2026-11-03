@@ -12,8 +12,18 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>org.intellij.scala</depends>
     <depends>com.redhat.devtools.lsp4ij</depends>
+    <depends>com.intellij.modules.jcef</depends>
+
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server id="socle" name="Socle" factoryClass="socle.intellij.lsp.SocleServerFactory">
+            <description><![CDATA[The Socle language server: View design and Simulate on ChiselSim tests, and the live design panel.]]></description>
+        </server>
+        <languageMapping language="Scala" serverId="socle"/>
+    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <notificationGroup id="Socle" displayType="BALLOON"/>
+        <postStartupActivity implementation="socle.intellij.SocleStartup"/>
         <applicationConfigurable parentId="tools" id="socle.settings" displayName="Socle"
                                  instance="socle.intellij.settings.SocleConfigurable"/>
     </extensions>

@@ -1,0 +1,38 @@
+package socle.intellij
+
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.editor.EditorFactory
+import com.intellij.openapi.editor.event.CaretEvent
+import com.intellij.openapi.editor.event.CaretListener
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.startup.ProjectActivity
+import com.intellij.util.Alarm
+import socle.intellij.settings.SocleSettingsListener
+
+/** Per project: the cursor in Scala files goes to the server (`socle/cursor`, debounced 300 ms), and setting changes too. */
+class SocleStartup : ProjectActivity {
+    override suspend fun execute(project: Project) {
+        val service = SocleProjectService.getInstance(project)
+        val alarm = Alarm(Alarm.ThreadToUse.POOLED_THREAD, service)
+        EditorFactory.getInstance().eventMulticaster.addCaretListener(object : CaretListener {
+            override fun caretPositionChanged(event: CaretEvent) {
+                val editor = event.editor
+                if (editor.project != project) return
+                val file = FileDocumentManager.getInstance().getFile(editor.document) ?: return
+                if (!file.isInLocalFileSystem || file.extension != "scala") return
+                val uri = file.toNioPath().toUri().toString()
+                val line = event.newPosition.line
+                alarm.cancelAllRequests()
+                alarm.addRequest({ service.sendCursor(uri, line) }, CURSOR_DEBOUNCE_MS)
+            }
+        }, service as Disposable)
+        ApplicationManager.getApplication().messageBus.connect(service).subscribe(SocleSettingsListener.TOPIC,
+            SocleSettingsListener { service.client?.triggerChangeConfiguration() })
+    }
+
+    companion object {
+        const val CURSOR_DEBOUNCE_MS = 300
+    }
+}
