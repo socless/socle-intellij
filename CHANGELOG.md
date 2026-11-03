@@ -12,3 +12,4 @@ release whose language server it bundles.
 - The first version: View design and Simulate on ChiselSim tests, the design panel beside the
   editor, the Socle tool window (Tests, Hierarchy, Details), the embedded Surfer tab and the Socle
   settings, at parity with Socle for VS Code. Bundles the language server of Socle 0.23.0.
+  Needs IntelliJ IDEA 2026.2 or newer with the Scala plugin and LSP4IJ.

@@ -35,6 +35,27 @@ To try a server that is not released yet, point `SOCLE_LSP_JAR` at a local jar (
 The plugin talks to the server through LSP and the `socle/*` methods listed in Socle's
 `docs/lsp-protocol.md`.
 
+## End-to-end check
+
+Unit and platform tests cannot run the server or JCEF, so two checks run against a real IDE:
+
+- **Headless (`e2e/run.sh`):** an isolated IntelliJ under Xvfb, with Socle, a driver plugin (`e2e/`),
+  LSP4IJ and the Scala plugin, opens a Socle checkout, waits for `socle/tests`, runs View design on
+  `GcdSpec` and waits for `socle/openPanel`. It checks the server start, the test list and the view
+  run, not the panel's content: on some machines JCEF's native process does not start under Xvfb.
+
+  ```bash
+  ./gradlew buildPlugin :e2e:buildPlugin
+  SOCLE_ROOT=/path/to/socle-at-the-pinned-tag e2e/run.sh   # exit 0: PASS
+  ```
+
+  `IDEA_HOME` (default `/usr/share/idea`) is an IntelliJ IDEA 2026.2+ install. The IDE never opens
+  on your screen (Wayland is unset, X11 goes to Xvfb).
+- **Manual ([e2e/MANUAL.md](e2e/MANUAL.md)):** the panel, the tool window and the Surfer tab in your
+  own IDE, about five minutes.
+
+Run both before a release and after bumping the server.
+
 ## CI and releases
 
 - **CI:** runs the tests, the plugin verifier and builds the zip (bundling the pinned server) on
