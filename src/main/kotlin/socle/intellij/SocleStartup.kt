@@ -1,5 +1,6 @@
 package socle.intellij
 
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.editor.EditorFactory
@@ -24,12 +25,18 @@ class SocleStartup : ProjectActivity {
                 if (editor.project != project) return
                 val file = FileDocumentManager.getInstance().getFile(editor.document) ?: return
                 if (!file.isInLocalFileSystem || file.extension != "scala") return
-                val uri = file.toNioPath().toUri().toString()
+                val uri = SocleProjectService.fileUri(file)
                 val line = event.newPosition.line
                 alarm.cancelAllRequests()
                 alarm.addRequest({ service.sendCursor(uri, line) }, CURSOR_DEBOUNCE_MS)
             }
         }, service as Disposable)
+        // The gutter icons come from the server's test list: redraw them when it changes.
+        project.messageBus.connect(service).subscribe(SocleEvents.TOPIC, object : SocleEvents {
+            override fun suitesUpdated(suites: List<SidebarModel.SuiteInfo>) {
+                DaemonCodeAnalyzer.getInstance(project).restart()
+            }
+        })
         ApplicationManager.getApplication().messageBus.connect(service).subscribe(SocleSettingsListener.TOPIC,
             SocleSettingsListener { service.client?.triggerChangeConfiguration() })
     }

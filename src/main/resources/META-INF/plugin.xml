@@ -27,7 +27,20 @@
         <notificationGroup id="Socle" displayType="BALLOON"/>
         <fileEditorProvider implementation="socle.intellij.panel.SocleTabEditorProvider"/>
         <postStartupActivity implementation="socle.intellij.SocleStartup"/>
+        <codeInsight.lineMarkerProvider language="Scala" implementationClass="socle.intellij.actions.SocleLineMarkerProvider"/>
         <applicationConfigurable parentId="tools" id="socle.settings" displayName="Socle"
                                  instance="socle.intellij.settings.SocleConfigurable"/>
     </extensions>
+
+    <actions>
+        <group id="socle.group" text="Socle" popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action id="socle.showPanel" class="socle.intellij.actions.ShowPanelAction" text="Show Design Panel"
+                    description="Show the Socle design panel on the last design"/>
+            <action id="socle.refreshTests" class="socle.intellij.actions.RefreshTestsAction" text="Refresh Tests"
+                    description="Ask the Socle server for the project's ChiselSim tests again"/>
+            <action id="socle.openSettings" class="socle.intellij.actions.OpenSettingsAction" text="Settings..."
+                    description="Open Settings | Tools | Socle"/>
+        </group>
+    </actions>
 </idea-plugin>

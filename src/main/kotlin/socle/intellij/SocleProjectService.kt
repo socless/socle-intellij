@@ -54,10 +54,15 @@ class SocleProjectService(private val project: Project) : Disposable {
     fun requestTests() {
         server().thenCompose { it.tests() }.whenComplete { result, error ->
             if (error != null) { thisLogger().info("socle/tests failed", error); return@whenComplete }
-            suites = SidebarModel.parseTests(result)
-            suitesLoaded = true
-            events.suitesUpdated(suites)
+            updateSuites(SidebarModel.parseTests(result))
         }
+    }
+
+    /** The project's tests are now `list`; listeners get `suitesUpdated`. */
+    fun updateSuites(list: List<SidebarModel.SuiteInfo>) {
+        suites = list
+        suitesLoaded = true
+        events.suitesUpdated(list)
     }
 
     /** `socle/cursor`: the class around (`uri`, 0-based `line`) becomes the panel's focus. */
@@ -108,6 +113,10 @@ class SocleProjectService(private val project: Project) : Disposable {
         const val SERVER_ID = "socle"
         const val VIEW_DESIGN = "socle.viewDesign"
         const val SIMULATE = "socle.simulate"
+
+        /** A file's URI as the server writes it (`file:///...`); a non-local file keeps its own URL. */
+        fun fileUri(file: com.intellij.openapi.vfs.VirtualFile): String =
+            file.fileSystem.getNioPath(file)?.toUri()?.toString() ?: file.url
 
         fun getInstance(project: Project): SocleProjectService = project.getService(SocleProjectService::class.java)
     }
