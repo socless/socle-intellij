@@ -1,9 +1,11 @@
 name: Release
 
 # A pushed `v*` tag checks the version and the release notes, builds the plugin
-# zip (bundling the pinned Socle server) and publishes it as a GitHub release.
-# No JetBrains Marketplace publishing for now. A manual dispatch only checks and
-# builds.
+# zip (bundling the pinned Socle server), publishes it as a GitHub release,
+# then on the JetBrains Marketplace (publishPlugin, with the PUBLISH_TOKEN
+# secret) once the repository variable MARKETPLACE_PUBLISH is "true": the
+# Marketplace takes only new versions of a plugin it already has, so the first
+# one is uploaded by hand. A manual dispatch only checks and builds.
 on:
   push:
     tags: ["v*"]
@@ -49,3 +51,11 @@ jobs:
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then echo "release $TAG exists"; exit 0; fi
           gh release create "$TAG" build/distributions/*.zip --title "Socle for IntelliJ ${TAG#v}" --notes-file notes.md
+
+      # JetBrains reviews each version before it shows on the Marketplace.
+      - name: Publish on the JetBrains Marketplace
+        if: github.ref_type == 'tag' && vars.MARKETPLACE_PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+        run: ./gradlew publishPlugin

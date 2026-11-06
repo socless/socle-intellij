@@ -7,6 +7,8 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-06
+
 ### Added
 
 - The first version: View design and Simulate on ChiselSim tests, the design panel beside the

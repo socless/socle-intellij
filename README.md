@@ -20,10 +20,11 @@ same features, through the same Socle language server.
 
 ## Install
 
-Download `socle-intellij-<version>.zip` from the
-[releases page](https://github.com/socless/socle-intellij/releases), then in IntelliJ:
-Settings | Plugins | the gear icon | Install Plugin from Disk. Each release bundles the language
-server of one Socle release (named in its notes). To build it yourself, see
+In IntelliJ: Settings | Plugins | Marketplace, search for **Socle (Chisel)** and install it (the IDE
+offers LSP4IJ with it). Or download `socle-intellij-<version>.zip` from the
+[releases page](https://github.com/socless/socle-intellij/releases) and use Settings | Plugins | the
+gear icon | Install Plugin from Disk. Each release bundles the language server of one Socle release
+(named in its notes). To build it yourself, see
 [DEVELOPING.md](DEVELOPING.md).
 
 ## Use it
@@ -60,7 +61,6 @@ server jar take effect when the server restarts (Language Servers view, or reope
 
 - A margin icon on each test instead of code lenses.
 - A tool window instead of the activity bar views.
-- Installed from the release zip (Install Plugin from Disk), not from a marketplace.
 - The Surfer tab opens in a split to the right of the active editor (IntelliJ has no "column after
   the panel").
 - Without JCEF (an IDE run without it) the design opens in your browser, and the Hierarchy and
