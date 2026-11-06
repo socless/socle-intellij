@@ -11,6 +11,12 @@ jobs:
     name: Test and build
     runs-on: ubuntu-latest
     steps:
+      # The IDE downloads for the tests and verifyPlugin fill the runner's disk:
+      # drop toolchains this build never uses.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL
+          df -h /
       - uses: actions/checkout@v7
       - uses: actions/setup-java@v6
         with:
