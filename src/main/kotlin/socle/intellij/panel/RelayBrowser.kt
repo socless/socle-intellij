@@ -5,7 +5,9 @@ import com.google.gson.JsonPrimitive
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.logger
 import com.intellij.openapi.util.Disposer
+import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
+import com.intellij.ui.jcef.JBCefClient
 import com.intellij.ui.jcef.JBCefJSQuery
 import java.nio.charset.StandardCharsets
 import javax.swing.JComponent
@@ -35,7 +37,12 @@ class RelayBrowser(
     frameUrl: (String, String) -> String,
     private val onMessage: (JsonObject) -> Unit,
 ) : Disposable {
-    private val browser = JBCefBrowser.createBuilder().setCreateImmediately(true).build()
+    // The browser is created at once, so the query below needs a pool on its client: without one,
+    // JBCefJSQuery.create throws and the UI's messages (the Surfer tab's open request) never arrive.
+    private val client = JBCefApp.getInstance().createClient().apply {
+        setProperty(JBCefClient.Properties.JS_QUERY_POOL_SIZE, 1)
+    }
+    private val browser = JBCefBrowser.createBuilder().setClient(client).setCreateImmediately(true).build()
     private val query = JBCefJSQuery.create(browser as com.intellij.ui.jcef.JBCefBrowserBase)
 
     val router = RelayRouter(
@@ -50,6 +57,7 @@ class RelayBrowser(
 
     init {
         Disposer.register(parent, this)
+        Disposer.register(this, client)
         Disposer.register(this, browser)
         Disposer.register(this, query)
         query.addHandler { json ->
