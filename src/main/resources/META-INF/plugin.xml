@@ -7,6 +7,9 @@
     panel beside the editor, and the schematic follows your cursor. The Socle tool window lists the
     project's tests (View design and Simulate on each), the design's instance hierarchy and the details
     of the selection.
+    <p>Needs the Scala plugin, LSP4IJ, Java 21 or newer, and a Mill project with ChiselSim tests.
+    The plugin bundles the Socle language server.
+    See <a href="https://github.com/socless/socle-intellij">socless/socle-intellij</a>.</p>
     ]]></description>
 
     <!-- LSP4IJ first, and no classloader dependency on the Scala plugin: it bundles its own lsp4j-jsonrpc,

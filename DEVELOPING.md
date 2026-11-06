@@ -61,5 +61,9 @@ Run both before a release and after bumping the server.
 - **CI:** runs the tests, the plugin verifier and builds the zip (bundling the pinned server) on
   pull requests and by hand.
 - **Releases:** a `v*` tag runs `release.yml`, which checks the version against `pluginVersion` and
-  the notes (`tools/release/notes.sh`), builds the zip and publishes it as a GitHub release. There
-  is no JetBrains Marketplace publishing for now.
+  the notes (`tools/release/notes.sh`), builds the zip and publishes it as a GitHub release, then
+  on the JetBrains Marketplace (`publishPlugin`) when the repository variable `MARKETPLACE_PUBLISH`
+  is `true`, with the `PUBLISH_TOKEN` secret (a Marketplace permanent token). The Marketplace only
+  takes new versions of a plugin it already lists: the first version (0.1.0) is uploaded by hand at
+  <https://plugins.jetbrains.com/plugin/add>. JetBrains reviews each version before it is public.
+  Its "What's New" is the version's section of `CHANGELOG.md` (`changeNotes`).

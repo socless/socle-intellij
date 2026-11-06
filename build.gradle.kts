@@ -1,10 +1,12 @@
 import java.net.URI
 import java.security.MessageDigest
+import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.jetbrains.intellij.platform")
+    id("org.jetbrains.changelog") version "2.5.0"
 }
 
 group = "socless"
@@ -37,6 +39,18 @@ intellijPlatform {
             sinceBuild = providers.gradleProperty("pluginSinceBuild")
             untilBuild = provider { null }
         }
+        // The Marketplace's "What's New": this version's section of CHANGELOG.md.
+        val log = changelog  // not `project`: the configuration cache cannot store it
+        changeNotes = providers.gradleProperty("pluginVersion").map { v ->
+            log.renderItem(
+                (log.getOrNull(v) ?: log.getUnreleased()).withHeader(false).withEmptySections(false),
+                Changelog.OutputType.HTML,
+            )
+        }
+    }
+    // publishPlugin (release.yml): a JetBrains Marketplace token.
+    publishing {
+        token = providers.environmentVariable("PUBLISH_TOKEN")
     }
     pluginVerification {
         ides {
