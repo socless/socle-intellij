@@ -15,6 +15,7 @@ release whose language server it bundles.
   brand's symbol alone. Bundles the language server of Socle 0.25.0.
 - The Marketplace page and the README show screenshots and an animation of the plugin, in dark
   and light.
+- The Tools | Socle menu shows icons on Show Design Panel, Refresh Tests and Settings.
 
 ### Fixed
 
