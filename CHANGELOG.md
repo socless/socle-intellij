@@ -7,6 +7,10 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-10
+
+Bundles the language server of Socle 0.26.0.
+
 ### Added
 
 - The Firtool options setting (`firtoolOpts`, default `-preserve-values=named`): the firtool
