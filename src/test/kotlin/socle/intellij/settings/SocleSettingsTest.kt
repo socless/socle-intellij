@@ -11,6 +11,7 @@ class SocleSettingsTest {
         assertEquals("", s.javaPath)
         assertEquals("", s.serverJar)
         assertEquals("emitVcd", s.waveFlag)
+        assertEquals("-preserve-values=named", s.firtoolOpts)
         assertEquals("surfer", s.surferCommand)
         assertEquals("surfer", s.waveViewer)
         assertEquals("", s.waveViewerCommand)
@@ -40,6 +41,7 @@ class SocleSettingsTest {
         assertEquals(listOf("op", "reg"), m["schematicHide"])
         assertEquals(150, m["wavesFollowDelayMs"])
         assertEquals("emitVcd", m["waveFlag"])
-        assertEquals(19, m.size)
+        assertEquals("-preserve-values=named", m["firtoolOpts"])
+        assertEquals(20, m.size)
     }
 }

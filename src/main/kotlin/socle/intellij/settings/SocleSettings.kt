@@ -16,6 +16,7 @@ class SocleSettings : PersistentStateComponent<SocleSettings.State> {
         var javaPath: String = ""
         var serverJar: String = ""
         var waveFlag: String = "emitVcd"
+        var firtoolOpts: String = "-preserve-values=named"
         var surferCommand: String = "surfer"
         var waveViewer: String = "surfer"
         var waveViewerCommand: String = ""
@@ -38,6 +39,7 @@ class SocleSettings : PersistentStateComponent<SocleSettings.State> {
         /** The settings the language server reads (all but the client's own `javaPath` and `serverJar`). */
         fun toServerSettings(): Map<String, Any> = linkedMapOf(
             "waveFlag" to waveFlag,
+            "firtoolOpts" to firtoolOpts,
             "surferCommand" to surferCommand,
             "waveViewer" to waveViewer,
             "waveViewerCommand" to waveViewerCommand,
