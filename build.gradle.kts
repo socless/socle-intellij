@@ -2,6 +2,7 @@ import java.net.URI
 import java.security.MessageDigest
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
@@ -106,7 +107,8 @@ val serverJar = tasks.register<ServerJar>("serverJar") {
 }
 
 tasks {
-    prepareSandbox {
+    // Every sandbox, not only prepareSandbox's: runIde fills its own (prepareSandbox_runIde).
+    withType<PrepareSandboxTask>().configureEach {
         from(serverJar) { into(pluginName.map { "$it/server" }) }
     }
     test {
