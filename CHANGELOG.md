@@ -7,6 +7,11 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+### Changed
+
+- The bundled server, from Socle 0.25.1: the design panel fits a narrow editor split, with no
+  scrollbars around the page.
+
 ## [0.1.1] - 2026-11-10
 
 ### Changed
