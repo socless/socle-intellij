@@ -24,6 +24,10 @@ version. The images go in `docs/images/` under the names below; the README alrea
      off the Problems widget and notification popups (Do Not Disturb in the notifications), and close
      every editor tab except those named in the shot.
    - No personal paths in sight: the title bar shows the project folder, `socle-shots` is fine.
+   - Less noise in the editor: Settings | Editor | Inlay Hints, Code vision off (it shows the Git
+     author of each class); Show Sticky Lines off (Find Action); highlighting level Syntax for each
+     file shown (Ctrl+Alt+Shift+H), so no warning stripe or wavy underline; View | Appearance, Tool
+     Window Bars off, which gives the panel the width its header needs.
 4. **The window.** Shots are 1280 x 800 (16:10), the Marketplace's recommended size. Make the
    IntelliJ window exactly 1280 x 800 *logical* pixels, so the text and the layout have the size
    the shot will show: on a 2x HiDPI screen it captures at 2560 x 1600 and is halved afterwards
@@ -54,15 +58,17 @@ Line numbers are those of the `v0.25.0` sources.
 
 ### 01 (GIF) - the same scene, moving
 
-- Same layout as shot 01. Start with the cursor on line 65 (`val pc = RegInit...`, in `Fetch`).
-- Steps, about 2 seconds on each, moving the cursor with the arrow keys or a click (no scrolling
-  jump in between: the three classes fit on the screen with the 15 pt font if lines 60 to 107 are
-  visible; if not, use 13 pt for the GIF):
+- Same layout as shot 01. Start with the cursor at the end of line 65 (`val pc = RegInit...`, in
+  `Fetch`), the editor scrolled so `class Fetch` is near the top.
+- Steps: hold the cursor about 2 seconds on each class, moving it down one line at a time with the
+  arrow key (about 9 lines a second); the editor scrolls along and the panel follows within half a
+  second:
   1. Line 65, `Fetch`: `fetch` highlighted.
-  2. Line 89, `Decode`: `decode` highlighted.
-  3. Line 104, `Exec`: `exec` highlighted.
-  4. Click the `wb` box in the panel: the editor jumps to its code in `RVPipeline.scala`. Hold 2 s.
-- Length: 8 to 12 s, looped. Record at 12 fps or more.
+  2. Down to line 89, `Decode`: `decode` highlighted.
+  3. Down to line 104, `Exec`: `exec` highlighted.
+  4. Down to line 110, `WB`: `wb` highlighted. Hold 2 s.
+- Length: about 14 s, looped, 12 fps. (A click on a box selects it and lights its wires; it does not
+  move the editor, so the GIF shows the code-to-schematic direction only.)
 
 ### 02 - Waveforms that follow the selection
 
@@ -73,13 +79,16 @@ Line numbers are those of the `v0.25.0` sources.
      the same icon, **Simulate**. The Surfer tab opens in a split to the right.
   2. Close `GcdSpec.scala`, so the window has two columns: the panel on the left and the Surfer tab
      on the right (drag the tabs if IntelliJ put them elsewhere). About 50/50.
-  3. In the panel, click the `x` register. Surfer shows its signals; if it shows only `x`, select the
+  3. With "Waves follow the selection" on, Surfer already lists the GCD module's signals (`io`,
+     and `x`, `y`, `busy` under Registers). If not: in the panel, click the `x` register. Surfer shows its signals; if it shows only `x`, select the
      GCD module itself (its row in the Socle tool window's Hierarchy tab) so `x`, `y`, `busy` and `io` are listed,
      then hide the tool window again.
-  4. In Surfer, zoom so the whole run fits: `x` and `y` step down from 48 and 18 to 6, then
+  4. In Surfer, View | Toggle side panel (the waves get the width), then View | Zoom to fit: `x` and `y` step down from 48 and 18 to 6, then
      `io.out.valid` rises. Put the cursor on the cycle where `io.out.valid` rises.
-- In frame: the schematic with the selection visible, and the waves with the 48/18 -> 6 descent
-  readable (values shown in decimal: right-click the signals, Format, Unsigned).
+- In frame: the schematic, and the waves with the 48/18 -> 6 descent readable (values shown in
+  decimal: right-click each signal, Format, Unsigned). The cursor's value column then reads
+  a = 48, b = 18, x = y = result = 6. For the light series, Surfer keeps its own dark theme: set
+  View | Theme | light+.
 - Caption: *Simulate runs the ChiselSim test with waveforms; Surfer opens beside the schematic and
   shows the signals of what you select.*
 
@@ -90,7 +99,9 @@ Line numbers are those of the `v0.25.0` sources.
   opens. Take the shot with the menu open, the mouse pointer on View design.
 - In frame: the editor only, the test body (lines 7 to 30) visible. Since the editor alone
   looks empty at 1280 px, open the Socle tool window on the left on its Tests tab: it shows the
-  same test listed.
+  same test listed. Collapse the `socle-probe` fixture suites there (BrokenSpec, ConfigSpec,
+  NoSimulateSpec: their tests are named "broken module" and the like); closing the panel refreshes
+  the list and expands them again, so collapse them last.
 - Caption: *Each ChiselSim test gets a Socle icon in the margin: View design or Simulate in one
   click.*
 
@@ -119,7 +130,9 @@ comes out under 1280 x 800):
 magick capture.png -gravity center -crop 16:10 +repage -resize 1280x800 -strip docs/images/01-cursor-follow-dark.png
 ```
 
-GIF: record the window to an MP4 with your desktop's recorder (Spectacle on KDE, Kooha on GNOME,
+GIF: the committed ones were recorded as a frame sequence (`grim` every 1/12 s on a headless
+1280 x 800 output) and encoded with `ffmpeg` (`palettegen` / `paletteuse`, 128 colours, about
+1.7 MB each). Or record the window to an MP4 with your desktop's recorder (Spectacle on KDE, Kooha on GNOME,
 or `wf-recorder -g "$(slurp)" -f in.mp4` on wlroots), then:
 
 ```sh
