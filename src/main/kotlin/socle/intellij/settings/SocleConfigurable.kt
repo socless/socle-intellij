@@ -40,6 +40,10 @@ class SocleConfigurable : BoundSearchableConfigurable("Socle", "socle.settings")
                     textField().bindText(edited::waveFlag)
                         .comment("ChiselSim option that turns waveforms on for Simulate, passed to ScalaTest as -D&lt;flag&gt;=1 (emitVcd is ChiselSim's; a project may define its own, such as emitFst).")
                 }
+                row("Firtool options:") {
+                    textField().bindText(edited::firtoolOpts).align(AlignX.FILL)
+                        .comment("firtool options Simulate compiles the design with, passed to ScalaTest as -DfirtoolOpts=&lt;value&gt; (several separated by spaces; ChiselSim adds them to the test's own). The default keeps the ports and instances firtool would remove, so they are in the trace. Empty: none.")
+                }
                 row("Wave viewer:") {
                     comboBox(listOf("surfer", "surfer-panel", "custom")).bindItem({ edited.waveViewer }, { edited.waveViewer = it ?: "surfer" })
                         .comment("Where Simulate shows the trace: surfer (the external Surfer app), surfer-panel (Surfer embedded in the Socle panel), or custom (the custom viewer command).")

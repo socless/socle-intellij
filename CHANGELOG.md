@@ -7,6 +7,12 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+### Added
+
+- The Firtool options setting (`firtoolOpts`, default `-preserve-values=named`): the firtool
+  options Simulate compiles the design with, so the ports and instances firtool would remove are
+  in the trace. Empty turns it off. A server older than Socle 0.26.0 ignores it.
+
 ## [0.1.3] - 2026-11-10
 
 Bundles the language server of Socle 0.25.2.
