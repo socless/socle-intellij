@@ -60,6 +60,16 @@ intellijPlatform {
     }
 }
 
+// runIde's IDE is the Maven artifact above, which has no JCEF native bundle: its panel stays empty.
+// runIdeLocal runs an installed IDE instead (-PlocalIde=/usr/share/idea), JCEF included.
+intellijPlatformTesting {
+    runIde {
+        register("runIdeLocal") {
+            localPath = layout.dir(providers.gradleProperty("localIde").map { file(it) })
+        }
+    }
+}
+
 /** Downloads the pinned socle-lsp jar (HTTPS, else `gh release download`) and checks its sha256;
   * SOCLE_LSP_JAR replaces it with a local jar, unchecked. */
 abstract class ServerJar : DefaultTask() {

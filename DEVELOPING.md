@@ -6,6 +6,7 @@ needs Java 21 or newer.
 ```bash
 ./gradlew test          # unit and platform tests
 ./gradlew runIde        # a sandbox IDE with the plugin (and the Scala plugin and LSP4IJ)
+./gradlew runIdeLocal -PlocalIde=/usr/share/idea  # the same on an installed IDE: runIde's has no JCEF (empty panel)
 ./gradlew buildPlugin   # build/distributions/socle-intellij-<version>.zip
 ./gradlew verifyPlugin  # the JetBrains plugin verifier
 ```

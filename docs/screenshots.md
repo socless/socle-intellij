@@ -10,9 +10,11 @@ version. The images go in `docs/images/` under the names below; the README alrea
    `git -C ~/dev/socless worktree add /tmp/socle-shots v0.25.0`. Open that folder in IntelliJ,
    trust it, and let Mill import it. Run View design once on each test used below, so the shots are
    not taken during the first compile.
-2. **The plugin.** `./gradlew runIde` from this repository: a throwaway IDE (config, caches and
-   plugins under `build/idea-sandbox/`, your own IDE untouched) with the plugin, the Scala plugin
-   and LSP4IJ. Its first start asks the usual first-run questions; answer them as a new user would.
+2. **The plugin.** `./gradlew runIdeLocal -PlocalIde=/usr/share/idea` from this repository (the
+   folder of an installed IntelliJ of the same build): a throwaway IDE (config, caches and plugins
+   under `.intellijPlatform/sandbox/`, your own IDE untouched) with the plugin, the Scala plugin and
+   LSP4IJ. Not plain `runIde`: its IDE has no JCEF, so the panel stays empty. The first start asks
+   the usual first-run questions; answer them as a new user would.
 3. **The IDE.**
    - Theme: the default **Dark** for the dark series, **Light** for the light one (Settings |
      Appearance & Behavior | Appearance). The panel follows the theme by itself; change nothing
