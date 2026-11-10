@@ -7,6 +7,10 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-10
+
+Bundles the language server of Socle 0.25.1.
+
 ### Changed
 
 - The bundled server, from Socle 0.25.1: the design panel fits a narrow editor split, with no
