@@ -7,6 +7,20 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-10
+
+### Changed
+
+- The plugin's logo fits the Platform's 40 x 40 frame, and the dark theme gets its own: the
+  brand's symbol alone. Bundles the language server of Socle 0.25.0.
+- The Marketplace page and the README show screenshots and an animation of the plugin, in dark
+  and light.
+
+### Fixed
+
+- `runIde` starts the language server: its sandbox now gets the server jar. `runIdeLocal` runs the
+  plugin in an installed IDE, whose JCEF the design panel needs.
+
 ## [0.1.0] - 2026-11-06
 
 ### Added
