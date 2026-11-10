@@ -1,0 +1,150 @@
+# Screenshots for the Marketplace page and the README
+
+A shot list for the plugin's images: four screenshots and one GIF, each in a dark and a light
+version. The images go in `docs/images/` under the names below; the README already points at them.
+
+## Setup (once)
+
+1. **The design.** A Socle checkout at the tag the plugin bundles (`socleVersion` in
+   `gradle.properties`, `v0.25.0` today), with Verilator on the PATH for Simulate:
+   `git -C ~/dev/socless worktree add /tmp/socle-shots v0.25.0`. Open that folder in IntelliJ,
+   trust it, and let Mill import it. Run View design once on each test used below, so the shots are
+   not taken during the first compile.
+2. **The plugin.** The release build (`./gradlew buildPlugin`, or the Marketplace version), not
+   `runIde`: the sandbox IDE shows its own banner and an unfamiliar look.
+3. **The IDE.**
+   - Theme: the default **Dark** for the dark series, **Light** for the light one (Settings |
+     Appearance & Behavior | Appearance). The panel follows the theme by itself; change nothing
+     else between the two series.
+   - Editor font: 15 pt (Settings | Editor | Font), so the code reads at 1280 px.
+   - Close every tool window except the one a shot needs (Project, Run, Terminal, Problems...), turn
+     off the Problems widget and notification popups (Do Not Disturb in the notifications), and close
+     every editor tab except those named in the shot.
+   - No personal paths in sight: the title bar shows the project folder, `socle-shots` is fine.
+4. **The window.** Shots are 1280 x 800 (16:10), the Marketplace's recommended size. Make the
+   IntelliJ window 16:10 and capture the window only (no desktop, no shadow), at whatever size your
+   screen allows: on a HiDPI screen 2560 x 1600 is ideal. Scale down afterwards (see Post-processing):
+   downscaling keeps text crisp, upscaling blurs it.
+
+## The shots
+
+Line numbers are those of the `v0.25.0` sources.
+
+### 01 - The schematic follows the cursor (the hero)
+
+- Files: `example/test/src/rvpipeline/RVPipelineSpec.scala`, then
+  `example/src/rvpipeline/RVPipeline.scala`.
+- Steps:
+  1. In `RVPipelineSpec.scala`, the margin icon on line 8, **View design**. The panel opens to the
+     right and shows the `RVPipeline` top: fetch, decode, exec, wb and rf.
+  2. Open `RVPipeline.scala` in the left split (close `RVPipelineSpec.scala`). Put the cursor on
+     line 104 (`io.out.bits.result := io.in.bits.rs1 + io.in.bits.rs2`), inside `class Exec`.
+  3. The schematic highlights the `exec` box. Scroll the editor so lines 96 to 107 (the whole
+     `Exec` class) sit in the middle.
+- In frame: the code on the left (about 45% of the width), the panel on the right with the whole
+  pipeline visible (Fit if needed) and `exec` highlighted. No tool window.
+- Caption: *The schematic follows your cursor: the class you are editing is highlighted in the
+  elaborated design.*
+
+### 01 (GIF) - the same scene, moving
+
+- Same layout as shot 01. Start with the cursor on line 65 (`val pc = RegInit...`, in `Fetch`).
+- Steps, about 2 seconds on each, moving the cursor with the arrow keys or a click (no scrolling
+  jump in between: the three classes fit on the screen with the 15 pt font if lines 60 to 107 are
+  visible; if not, use 13 pt for the GIF):
+  1. Line 65, `Fetch`: `fetch` highlighted.
+  2. Line 89, `Decode`: `decode` highlighted.
+  3. Line 104, `Exec`: `exec` highlighted.
+  4. Click the `wb` box in the panel: the editor jumps to its code in `RVPipeline.scala`. Hold 2 s.
+- Length: 8 to 12 s, looped. Record at 12 fps or more.
+
+### 02 - Waveforms that follow the selection
+
+- Setting: Settings | Tools | Socle, wave viewer `surfer-panel`, "Waves follow the selection" on.
+- File: `example/test/src/gcd/GcdSpec.scala`.
+- Steps:
+  1. The margin icon on the test (line 9, `it("computes gcd(48, 18)")`), **View design**, then
+     the same icon, **Simulate**. The Surfer tab opens in a split to the right.
+  2. Close `GcdSpec.scala`, so the window has two columns: the panel on the left and the Surfer tab
+     on the right (drag the tabs if IntelliJ put them elsewhere). About 50/50.
+  3. In the panel, click the `x` register. Surfer shows its signals; if it shows only `x`, select the
+     GCD module itself (its row in the Socle tool window's Hierarchy tab) so `x`, `y`, `busy` and `io` are listed.
+  4. In Surfer, zoom so the whole run fits: `x` and `y` step down from 48 and 18 to 6, then
+     `io.out.valid` rises. Put the cursor on the cycle where `io.out.valid` rises.
+- In frame: the schematic with the selection visible, and the waves with the 48/18 -> 6 descent
+  readable (values shown in decimal: right-click the signals, Format, Unsigned).
+- Caption: *Simulate runs the ChiselSim test with waveforms; Surfer opens beside the schematic and
+  shows the signals of what you select.*
+
+### 03 - Where it starts: the margin icon
+
+- File: `example/test/src/gcd/GcdSpec.scala`, alone in the editor, no panel open (close it).
+- Steps: click the Socle icon in the margin of line 9; its menu (**View design**, **Simulate**)
+  opens. Take the shot with the menu open, the mouse pointer on View design.
+- In frame: the editor only, the test body (lines 7 to 30) visible. Since the editor alone
+  looks empty at 1280 px, open the Socle tool window on the left on its Tests tab: it shows the
+  same test listed.
+- Caption: *Each ChiselSim test gets a Socle icon in the margin: View design or Simulate in one
+  click.*
+
+### 04 - The Socle tool window
+
+- Files: `example/test/src/deephier/DeepSocSpec.scala`: the deepest hierarchy among the examples,
+  so the Hierarchy tab has something to show.
+- Steps:
+  1. The margin icon on line 8 (`test("DeepSoc elaborates and steps")`), **View design**.
+  2. Open the Socle tool window (left), **Hierarchy** tab, expand it two or three levels, and select
+     a core (`cluster0` > `cores_0`, a `Core`). The schematic goes there.
+  3. Close the spec, so the window is: the tool window on the left (about 25%), the panel on the
+     rest.
+  4. Take a second frame of the same scene on the **Details** tab (the selection's class,
+     parameters and ports), and keep the better one. Hierarchy is the default.
+- Caption: *The Socle tool window lists the project's tests, the design's hierarchy and the
+  details of the selection.*
+
+## Post-processing
+
+Screenshots, from a 16:10 capture of any size (ImageMagick):
+
+```sh
+magick capture.png -resize 1280x800 -strip docs/images/01-cursor-follow-dark.png
+```
+
+If the capture is not exactly 16:10, crop it first rather than stretch it:
+`magick capture.png -gravity center -crop 16:10 +repage -resize 1280x800 -strip out.png`.
+
+GIF: record the window to an MP4 with your desktop's recorder (Spectacle on KDE, Kooha on GNOME,
+or `wf-recorder -g "$(slurp)" -f in.mp4` on wlroots), then:
+
+```sh
+mkdir frames && ffmpeg -i in.mp4 -vf "fps=12,scale=1280:-1:flags=lanczos" frames/%04d.png
+gifski --fps 12 --width 1280 --quality 80 -o docs/images/01-cursor-follow-dark.gif frames/*.png
+```
+
+Aim for under 5 MB (GitHub shows larger GIFs, but slowly); lower `--quality` or the fps if needed.
+
+## Files
+
+| File | Shot |
+|---|---|
+| `docs/images/01-cursor-follow-dark.gif`, `-light.gif` | 01, moving (README top, Marketplace first) |
+| `docs/images/01-cursor-follow-dark.png`, `-light.png` | 01 |
+| `docs/images/02-waveforms-dark.png`, `-light.png` | 02 |
+| `docs/images/03-margin-icon-dark.png`, `-light.png` | 03 |
+| `docs/images/04-tool-window-dark.png`, `-light.png` | 04 |
+
+## Marketplace upload
+
+The Marketplace page has no light or dark mode, so it gets one series: the **dark** one, IntelliJ's
+default theme. The light series serves the README for readers in a light GitHub theme.
+
+In the plugin's admin page, Media, in this order, each with its caption from above:
+
+1. `01-cursor-follow-dark.gif`
+2. `01-cursor-follow-dark.png`
+3. `02-waveforms-dark.png`
+4. `03-margin-icon-dark.png`
+5. `04-tool-window-dark.png`
+
+Check before uploading: 1280 x 800 each, no personal path, no notification, no error in sight, text
+readable at 100% zoom.
