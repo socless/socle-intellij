@@ -7,6 +7,10 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-10
+
+Bundles the language server of Socle 0.25.2.
+
 ### Changed
 
 - The bundled server, from Socle 0.25.2: View design and Simulate run on the test module's own
