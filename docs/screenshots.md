@@ -22,9 +22,12 @@ version. The images go in `docs/images/` under the names below; the README alrea
      every editor tab except those named in the shot.
    - No personal paths in sight: the title bar shows the project folder, `socle-shots` is fine.
 4. **The window.** Shots are 1280 x 800 (16:10), the Marketplace's recommended size. Make the
-   IntelliJ window 16:10 and capture the window only (no desktop, no shadow), at whatever size your
-   screen allows: on a HiDPI screen 2560 x 1600 is ideal. Scale down afterwards (see Post-processing):
-   downscaling keeps text crisp, upscaling blurs it.
+   IntelliJ window exactly 1280 x 800 *logical* pixels, so the text and the layout have the size
+   the shot will show: on a 2x HiDPI screen it captures at 2560 x 1600 and is halved afterwards
+   (crisp); on a 1x screen it captures at 1280 x 800 and needs no resize. Do not capture a larger
+   window and shrink it: the 15 pt text would end up around 10 pt. Capture the window only (no
+   desktop, no shadow). On KDE, a window rule (Window Rules, Size) holds the size; elsewhere, a
+   1280 x 800 virtual display or the IDE in a nested compositor (`cage`, `gamescope -w 1280 -h 800`).
 
 ## The shots
 
@@ -68,7 +71,8 @@ Line numbers are those of the `v0.25.0` sources.
   2. Close `GcdSpec.scala`, so the window has two columns: the panel on the left and the Surfer tab
      on the right (drag the tabs if IntelliJ put them elsewhere). About 50/50.
   3. In the panel, click the `x` register. Surfer shows its signals; if it shows only `x`, select the
-     GCD module itself (its row in the Socle tool window's Hierarchy tab) so `x`, `y`, `busy` and `io` are listed.
+     GCD module itself (its row in the Socle tool window's Hierarchy tab) so `x`, `y`, `busy` and `io` are listed,
+     then hide the tool window again.
   4. In Surfer, zoom so the whole run fits: `x` and `y` step down from 48 and 18 to 6, then
      `io.out.valid` rises. Put the cursor on the cycle where `io.out.valid` rises.
 - In frame: the schematic with the selection visible, and the waves with the 48/18 -> 6 descent
@@ -104,14 +108,13 @@ Line numbers are those of the `v0.25.0` sources.
 
 ## Post-processing
 
-Screenshots, from a 16:10 capture of any size (ImageMagick):
+Screenshots: crop to 16:10 (a no-op on an exact capture), then halve a HiDPI capture
+(ImageMagick; `-resize` keeps the aspect ratio, so without the crop a capture slightly off 16:10
+comes out under 1280 x 800):
 
 ```sh
-magick capture.png -resize 1280x800 -strip docs/images/01-cursor-follow-dark.png
+magick capture.png -gravity center -crop 16:10 +repage -resize 1280x800 -strip docs/images/01-cursor-follow-dark.png
 ```
-
-If the capture is not exactly 16:10, crop it first rather than stretch it:
-`magick capture.png -gravity center -crop 16:10 +repage -resize 1280x800 -strip out.png`.
 
 GIF: record the window to an MP4 with your desktop's recorder (Spectacle on KDE, Kooha on GNOME,
 or `wf-recorder -g "$(slurp)" -f in.mp4` on wlroots), then:
@@ -127,7 +130,7 @@ Aim for under 5 MB (GitHub shows larger GIFs, but slowly); lower `--quality` or 
 
 | File | Shot |
 |---|---|
-| `docs/images/01-cursor-follow-dark.gif`, `-light.gif` | 01, moving (README top, Marketplace first) |
+| `docs/images/01-cursor-follow-dark.gif`, `-light.gif` | 01, moving (README top, Marketplace second) |
 | `docs/images/01-cursor-follow-dark.png`, `-light.png` | 01 |
 | `docs/images/02-waveforms-dark.png`, `-light.png` | 02 |
 | `docs/images/03-margin-icon-dark.png`, `-light.png` | 03 |
@@ -138,10 +141,14 @@ Aim for under 5 MB (GitHub shows larger GIFs, but slowly); lower `--quality` or 
 The Marketplace page has no light or dark mode, so it gets one series: the **dark** one, IntelliJ's
 default theme. The light series serves the README for readers in a light GitHub theme.
 
+The IDE's own Marketplace view shows a GIF as a still image (its first frame), so the page leads
+with the PNG and the GIF comes second; start the GIF on a frame that reads on its own (the cursor in
+`Fetch`, `fetch` highlighted).
+
 In the plugin's admin page, Media, in this order, each with its caption from above:
 
-1. `01-cursor-follow-dark.gif`
-2. `01-cursor-follow-dark.png`
+1. `01-cursor-follow-dark.png`
+2. `01-cursor-follow-dark.gif`
 3. `02-waveforms-dark.png`
 4. `03-margin-icon-dark.png`
 5. `04-tool-window-dark.png`
