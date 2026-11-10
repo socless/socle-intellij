@@ -9,6 +9,11 @@ details of the selection.
 It is the IntelliJ counterpart of [Socle for VS Code](https://github.com/socless/socle-vscode): the
 same features, through the same Socle language server.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/01-cursor-follow-dark.gif">
+  <img alt="The schematic follows the cursor in RVPipeline.scala" src="docs/images/01-cursor-follow-light.gif">
+</picture>
+
 ## Requirements
 
 - IntelliJ IDEA 2026.2 or newer (the open-source edition is enough), with the JetBrains
@@ -32,12 +37,29 @@ gear icon | Install Plugin from Disk. Each release bundles the language server o
 1. Open a ChiselSim test, for example `example/test/src/gcd/GcdSpec.scala` of a Socle checkout.
    LSP4IJ starts the Socle language server; once it has listed the project's tests, a Socle icon
    appears in the margin of each test.
+
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="docs/images/03-margin-icon-dark.png">
+     <img alt="The Socle icon in the margin of a test, with View design and Simulate" src="docs/images/03-margin-icon-light.png">
+   </picture>
+
 2. Click the icon and pick **View design**. The design panel opens beside the editor (the first run
    of a test compiles it with Mill, which takes a while). The schematic follows the class under your
    cursor; a click on a box opens its code.
+
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="docs/images/01-cursor-follow-dark.png">
+     <img alt="RVPipeline.scala beside its schematic, the Exec box highlighted" src="docs/images/01-cursor-follow-light.png">
+   </picture>
+
 3. Pick **Simulate** to run the test with waveforms and open the trace in the wave viewer: the
    Surfer app by default, or Surfer inside the IDE with the `surfer-panel` viewer, whose signals
    follow the schematic's selection.
+
+   <picture>
+     <source media="(prefers-color-scheme: dark)" srcset="docs/images/02-waveforms-dark.png">
+     <img alt="The GCD schematic beside Surfer, showing x and y converge to 6" src="docs/images/02-waveforms-light.png">
+   </picture>
 
 The **Socle** tool window (left) has three tabs:
 - **Tests:** the project's ChiselSim suites and tests with their state (shown, running, failed);
@@ -45,6 +67,11 @@ The **Socle** tool window (left) has three tabs:
 - **Hierarchy:** the panel's instance tree; a selection takes the schematic there, Open Source in the
   context menu.
 - **Details:** what is selected in the schematic: its class, parameters and ports.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/04-tool-window-dark.png">
+  <img alt="The Socle tool window on its Hierarchy tab beside the schematic" src="docs/images/04-tool-window-light.png">
+</picture>
 
 **Tools | Socle** has Show Design Panel, Show Waveforms (the last Simulate's trace in the Surfer
 tab), Refresh Tests and Settings.

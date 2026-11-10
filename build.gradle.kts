@@ -2,6 +2,7 @@ import java.net.URI
 import java.security.MessageDigest
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.tasks.PrepareSandboxTask
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
@@ -59,6 +60,16 @@ intellijPlatform {
     }
 }
 
+// runIde's IDE is the Maven artifact above, which has no JCEF native bundle: its panel stays empty.
+// runIdeLocal runs an installed IDE instead (-PlocalIde=/usr/share/idea), JCEF included.
+intellijPlatformTesting {
+    runIde {
+        register("runIdeLocal") {
+            localPath = layout.dir(providers.gradleProperty("localIde").map { file(it) })
+        }
+    }
+}
+
 /** Downloads the pinned socle-lsp jar (HTTPS, else `gh release download`) and checks its sha256;
   * SOCLE_LSP_JAR replaces it with a local jar, unchecked. */
 abstract class ServerJar : DefaultTask() {
@@ -106,7 +117,8 @@ val serverJar = tasks.register<ServerJar>("serverJar") {
 }
 
 tasks {
-    prepareSandbox {
+    // Every sandbox, not only prepareSandbox's: runIde fills its own (prepareSandbox_runIde).
+    withType<PrepareSandboxTask>().configureEach {
         from(serverJar) { into(pluginName.map { "$it/server" }) }
     }
     test {
