@@ -298,6 +298,68 @@ class SidebarModelTest {
         assertEquals(listOf("core", "Ports"), bare.map { it.label })
     }
 
+    // ── fold groups ──
+
+    // Cluster folds cores_0..cores_2 (group "cores"); `ctl` is not a copy.
+    private val folded = json(
+        """{"type":"socle-state",
+          | "design":{"top":"Top","modules":[
+          |   {"name":"Top","scalaClass":"x.Top","kind":"internal","source":null,"children":[{"name":"cl","type":"Cluster"}]},
+          |   {"name":"Cluster","scalaClass":"x.Cluster","kind":"internal","source":null,
+          |    "children":[{"name":"cores_0","type":"Core","foldGroup":"cores"},{"name":"ctl","type":"Ctl"},
+          |                {"name":"cores_1","type":"Core_1","foldGroup":"cores"},{"name":"cores_2","type":"Core_2","foldGroup":"cores"}]},
+          |   {"name":"Core","scalaClass":"x.Core","kind":"internal","source":{"file":"src/Core.scala","line":3},"children":[]},
+          |   {"name":"Core_1","scalaClass":"x.Core","kind":"internal","source":null,"children":[]},
+          |   {"name":"Core_2","scalaClass":"x.Core","kind":"internal","source":null,"children":[]},
+          |   {"name":"Ctl","scalaClass":"x.Ctl","kind":"internal","source":null,"children":[]}
+          | ]},
+          | "path":["Top","cl"], "selection":"cores",
+          | "details":{"name":"cores","module":"Core","scalaClass":"x.Core","kind":"internal","params":[],"ports":[],"copies":3}
+          |}""".trimMargin())
+    private val cl = listOf("Top", "cl")
+    private val g = cl + "#cores"
+
+    @Test
+    fun foldGroupIsOneNodeWithItsCopiesUnderIt() {
+        val d = SidebarModel.parseUiState(folded)!!.design!!
+        assertEquals(mapOf("cores_0" to "cores", "cores_1" to "cores", "cores_2" to "cores"), d.modules["Cluster"]!!.groups)
+        assertEquals(listOf(g, cl + "ctl"), SidebarModel.hierChildren(d, cl))
+        assertEquals(listOf(cl + "cores_0", cl + "cores_1", cl + "cores_2"), SidebarModel.hierChildren(d, g))
+    }
+
+    @Test
+    fun foldGroupRow() {
+        val d = SidebarModel.parseUiState(folded)!!.design!!
+        val r = SidebarModel.hierRow(d, g)!!
+        assertEquals("cores × 3", r.label); assertEquals("Core", r.description); assertEquals("group", r.contextValue)
+        assertEquals("hier:Top/cl/#cores", r.id); assertTrue(r.expandable); assertTrue(r.tooltip.contains("3 generator copies of x.Core"))
+        assertNull(SidebarModel.hierRow(d, cl + "#nope"))
+    }
+
+    @Test
+    fun foldGroupNavigationSourceAndReveal() {
+        val d = SidebarModel.parseUiState(folded)!!.design!!
+        assertEquals(cl to "cores", SidebarModel.navigateTarget(d, g))
+        assertEquals(cl to "cores_1", SidebarModel.navigateTarget(d, cl + "cores_1"))
+        assertEquals(SidebarModel.SourceInfo("src/Core.scala", 3), SidebarModel.moduleSource(d, g))
+        assertEquals(g, SidebarModel.revealPath(d, cl, "cores"))
+        assertEquals(cl + "cores_2", SidebarModel.revealPath(d, cl, "cores_2"))
+    }
+
+    @Test
+    fun foldGroupDetailsGiveTheCopies() {
+        val rows = SidebarModel.detailRows(SidebarModel.parseUiState(folded)!!.details!!)
+        assertEquals(listOf("cores", "3 generator copies", "x.Core", "Ports"), rows.map { it.label })
+        assertTrue(SidebarModel.detailRows(SidebarModel.parseUiState(state)!!.details!!).none { it.id == "detail:copies" })
+    }
+
+    @Test
+    fun olderServerWithoutFoldGroupsListsEveryCopy() {
+        val d = SidebarModel.parseUiState(state)!!.design!!
+        assertTrue(d.modules.values.all { it.groups.isEmpty() })
+        assertEquals(listOf(listOf("DeepSoc", "cluster0"), listOf("DeepSoc", "pipe")), SidebarModel.hierChildren(d, listOf("DeepSoc")))
+    }
+
     // ── editor side ──
 
     @Test

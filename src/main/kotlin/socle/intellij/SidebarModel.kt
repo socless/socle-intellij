@@ -132,11 +132,14 @@ object SidebarModel {
     // ── socle-state (from the UI in the panel) ──
 
     data class SourceInfo(val file: String, val line: Int)
+    /** `groups`: a generator copy's fold group, by child name (Socle 0.27.0 and later send it). */
     data class ModuleInfo(val name: String, val scalaClass: String, val kind: String, val source: SourceInfo?,
-                          val children: List<Pair<String, String>>)
+                          val children: List<Pair<String, String>>, val groups: Map<String, String> = emptyMap())
     data class DesignInfo(val top: String, val modules: Map<String, ModuleInfo>)
+    /** `copies`: the generator copies a folded box stands for (0 for any other instance). */
     data class DetailsInfo(val name: String, val module: String, val scalaClass: String, val kind: String,
-                           val params: List<Triple<String, String, String>>, val ports: List<Triple<String, String, String>>)
+                           val params: List<Triple<String, String, String>>, val ports: List<Triple<String, String, String>>,
+                           val copies: Int = 0)
 
     /** `designChanged` false: the message left the design as it was (the UI sends it only when it changes). */
     data class UiState(val designChanged: Boolean, val design: DesignInfo?, val path: List<String>,
@@ -148,7 +151,10 @@ object SidebarModel {
         val kids = arr(o["children"]) ?: return null
         val source = obj(o["source"])?.let { s -> str(s["file"])?.let { f -> int(s["line"])?.let { SourceInfo(f, it) } } }
         return ModuleInfo(name, str(o["scalaClass"]) ?: "", str(o["kind"]) ?: "", source,
-            kids.mapNotNull { c -> obj(c)?.let { x -> str(x["name"])?.let { n -> str(x["type"])?.let { n to it } } } })
+            kids.mapNotNull { c -> obj(c)?.let { x -> str(x["name"])?.let { n -> str(x["type"])?.let { n to it } } } },
+            kids.mapNotNull { c ->
+                obj(c)?.let { x -> str(x["name"])?.let { n -> str(x["foldGroup"])?.takeIf { it.isNotEmpty() }?.let { n to it } } }
+            }.toMap())
     }
 
     private fun triples(v: JsonElement?, a: String, b: String, c: String): List<Triple<String, String, String>> =
@@ -179,7 +185,8 @@ object SidebarModel {
             val n = str(x["name"]) ?: return null
             val m = str(x["module"]) ?: return null
             DetailsInfo(n, m, str(x["scalaClass"]) ?: "", str(x["kind"]) ?: "",
-                triples(x["params"], "name", "type", "value"), triples(x["ports"], "name", "dir", "type"))
+                triples(x["params"], "name", "type", "value"), triples(x["ports"], "name", "dir", "type"),
+                int(x["copies"]) ?: 0)
         }
         return UiState(designChanged, design, path, selection, details)
     }
@@ -196,37 +203,84 @@ object SidebarModel {
 
     fun hierRoots(d: DesignInfo): List<List<String>> = if (d.top in d.modules) listOf(listOf(d.top)) else emptyList()
 
-    fun hierChildren(d: DesignInfo, path: List<String>): List<List<String>> =
-        moduleAt(d, path)?.children?.map { path + it.first } ?: emptyList()
+    // A fold group's node: its module's path, then `#<group>` (no instance name starts
+    // with `#`). The copies are its children, with their own paths.
+    private const val GROUP_MARK = "#"
+
+    private fun groupOf(path: List<String>): String? =
+        path.lastOrNull()?.takeIf { it.startsWith(GROUP_MARK) }?.removePrefix(GROUP_MARK)
+
+    /** The copies of `group` in the module at `parent`, in child order. */
+    private fun copies(d: DesignInfo, parent: List<String>, group: String): List<Pair<String, String>> =
+        moduleAt(d, parent)?.let { m -> m.children.filter { m.groups[it.first] == group } } ?: emptyList()
+
+    /** A module's children, a fold group as one node where its first copy is; a group node's children are its copies. */
+    fun hierChildren(d: DesignInfo, path: List<String>): List<List<String>> {
+        groupOf(path)?.let { g -> return copies(d, path.dropLast(1), g).map { path.dropLast(1) + it.first } }
+        val m = moduleAt(d, path) ?: return emptyList()
+        val seen = mutableSetOf<String>()
+        return m.children.mapNotNull { c ->
+            when (val g = m.groups[c.first]) {
+                null -> path + c.first
+                else -> if (seen.add(g)) path + (GROUP_MARK + g) else null
+            }
+        }
+    }
 
     fun hierId(path: List<String>): String = "hier:" + path.joinToString("/")
 
-    fun hierRow(d: DesignInfo, path: List<String>): Row? = moduleAt(d, path)?.let { m ->
-        val cls = m.scalaClass.substringAfterLast('.')
-        val desc = cls.ifEmpty { m.name }
-        val tip = if (m.scalaClass.isNotEmpty()) "${m.scalaClass} (module ${m.name})" else "module ${m.name}"
-        val icon = if (m.kind == "external" || m.kind == "intrinsic") "package" else "circuit-board"
-        Row(hierId(path), path.last(), desc, tip, icon, "module", expandable = m.children.isNotEmpty())
+    /** Instance name, module (or Scala class) simple name. A fold group: `<group> × <n>`, its first copy's class. */
+    fun hierRow(d: DesignInfo, path: List<String>): Row? {
+        groupOf(path)?.let { g ->
+            val cs = copies(d, path.dropLast(1), g)
+            val m = cs.firstOrNull()?.let { d.modules[it.second] } ?: return null
+            val of = m.scalaClass.ifEmpty { m.name }
+            return Row(hierId(path), "$g × ${cs.size}", m.scalaClass.substringAfterLast('.').ifEmpty { m.name },
+                "${cs.size} generator copies of $of, folded in the schematic", "layers", "group", expandable = true)
+        }
+        return moduleAt(d, path)?.let { m ->
+            val cls = m.scalaClass.substringAfterLast('.')
+            val desc = cls.ifEmpty { m.name }
+            val tip = if (m.scalaClass.isNotEmpty()) "${m.scalaClass} (module ${m.name})" else "module ${m.name}"
+            val icon = if (m.kind == "external" || m.kind == "intrinsic") "package" else "circuit-board"
+            Row(hierId(path), path.last(), desc, tip, icon, "module", expandable = m.children.isNotEmpty())
+        }
     }
 
-    /** Where a Hierarchy row takes the schematic: into a module, or its parent with the leaf selected. */
-    fun navigateTarget(d: DesignInfo, path: List<String>): Pair<List<String>, String?>? = moduleAt(d, path)?.let { m ->
-        if (m.children.isEmpty() && path.size > 1) path.dropLast(1) to path.last() else path to null
+    /** Where a Hierarchy row takes the schematic: into a module, or its parent with the leaf (or the
+     *  folded box of a fold group) selected. */
+    fun navigateTarget(d: DesignInfo, path: List<String>): Pair<List<String>, String?>? {
+        groupOf(path)?.let { g -> return if (copies(d, path.dropLast(1), g).isEmpty()) null else path.dropLast(1) to g }
+        return moduleAt(d, path)?.let { m ->
+            if (m.children.isEmpty() && path.size > 1) path.dropLast(1) to path.last() else path to null
+        }
     }
 
-    fun moduleSource(d: DesignInfo, path: List<String>): SourceInfo? = moduleAt(d, path)?.source
+    /** A module's source; a fold group's is its first copy's. */
+    fun moduleSource(d: DesignInfo, path: List<String>): SourceInfo? {
+        groupOf(path)?.let { g -> return copies(d, path.dropLast(1), g).firstOrNull()?.let { d.modules[it.second] }?.source }
+        return moduleAt(d, path)?.source
+    }
 
-    /** The Hierarchy row to reveal for the drill path (only one from the top), or the selected child instance under it. */
+    /** The Hierarchy row to reveal for the drill path (only one from the top), or the selected child
+     *  instance under it, or the selected fold group. */
     fun revealPath(d: DesignInfo, path: List<String>, selection: String? = null): List<String>? {
         if (path.firstOrNull() != d.top) return null
         val m = moduleAt(d, path) ?: return null
-        return if (selection != null && m.children.any { it.first == selection }) path + selection else path
+        return when {
+            selection == null -> path
+            m.children.any { it.first == selection } -> path + selection
+            m.groups.values.any { it == selection } -> path + (GROUP_MARK + selection)
+            else -> path
+        }
     }
 
     // ── Details ──
 
     fun detailRows(det: DetailsInfo): List<Row> {
         val rows = mutableListOf(Row("detail:name", det.name, det.module, "${det.name}: module ${det.module}", "symbol-module"))
+        if (det.copies > 0) rows += Row("detail:copies", "${det.copies} generator copies", "folded",
+            "${det.name} stands for ${det.copies} generator copies of ${det.module}", "layers")
         if (det.scalaClass.isNotEmpty()) rows += Row("detail:class", det.scalaClass, "Scala class", det.scalaClass, "symbol-class")
         if (det.params.isNotEmpty()) rows += Row("detail:params", "Parameters", det.params.size.toString(),
             icon = "symbol-parameter", expandable = true,
