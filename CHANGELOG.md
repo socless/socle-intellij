@@ -7,6 +7,13 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+### Added
+
+- The Hierarchy view shows generator copies as the schematic folds them: one `<name> × <n>` row,
+  which selects the folded box in the schematic and lists the copies under it. The Details view
+  of a folded box gives its copy count. Needs the language server of Socle 0.27.0 or later (an
+  older one sends no fold groups: every copy is a row).
+
 ## [0.2.0] - 2026-11-10
 
 Bundles the language server of Socle 0.26.0.

@@ -69,6 +69,7 @@ class RowTree {
             "error" -> AllIcons.General.Error
             "circuit-board", "symbol-module" -> AllIcons.Nodes.Module
             "package" -> AllIcons.Nodes.Package
+            "layers" -> AllIcons.Nodes.ModuleGroup
             "symbol-parameter" -> AllIcons.Nodes.Parameter
             "plug" -> AllIcons.Nodes.Plugin
             "arrow-right" -> AllIcons.General.ArrowRight
