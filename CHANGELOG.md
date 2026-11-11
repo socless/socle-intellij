@@ -7,6 +7,10 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-11
+
+Bundles the language server of Socle 0.27.0.
+
 ### Added
 
 - The Hierarchy view shows generator copies as the schematic folds them: one `<name> × <n>` row,
