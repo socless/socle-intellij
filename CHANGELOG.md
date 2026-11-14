@@ -7,6 +7,10 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-14
+
+Bundles the language server of Socle 0.29.0.
+
 ### Changed
 
 - The bundled server, from Socle 0.28.0: a CHIRRTL statement the parser does not know or cannot
