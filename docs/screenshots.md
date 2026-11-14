@@ -6,8 +6,8 @@ version. The images go in `docs/images/` under the names below; the README alrea
 ## Setup (once)
 
 1. **The design.** A Socle checkout at the tag the plugin bundles (`socleVersion` in
-   `gradle.properties`, `v0.29.0` today), with Verilator on the PATH for Simulate:
-   `git -C ~/dev/socless worktree add /tmp/socle-shots v0.29.0`. Open that folder in IntelliJ,
+   `gradle.properties`, `v0.30.0` today), with Verilator on the PATH for Simulate:
+   `git -C ~/dev/socless worktree add /tmp/socle-shots v0.30.0`. Open that folder in IntelliJ,
    trust it, and let Mill import it. Run View design once on each test used below, so the shots are
    not taken during the first compile.
 2. **The plugin.** `./gradlew runIdeLocal -PlocalIde=/usr/share/idea` from this repository (the
@@ -38,7 +38,7 @@ version. The images go in `docs/images/` under the names below; the README alrea
 
 ## The shots
 
-Line numbers are those of the `v0.29.0` sources.
+Line numbers are those of the `v0.30.0` sources.
 
 ### 01 - The schematic follows the cursor (the hero)
 

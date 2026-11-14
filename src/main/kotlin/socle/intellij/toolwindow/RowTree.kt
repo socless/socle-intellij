@@ -9,6 +9,8 @@ import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.tree.TreeUtil
 import javax.swing.Icon
 import javax.swing.JTree
+import javax.swing.event.TreeExpansionEvent
+import javax.swing.event.TreeExpansionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
@@ -22,16 +24,26 @@ class RowTree {
         isRootVisible = false
         showsRootHandles = true
         cellRenderer = Renderer()
+        // A row that opens opens its `expanded` children with it.
+        addTreeExpansionListener(object : TreeExpansionListener {
+            override fun treeExpanded(e: TreeExpansionEvent) {
+                val n = e.path.lastPathComponent as? DefaultMutableTreeNode ?: return
+                n.children().toList().filter { ((it as DefaultMutableTreeNode).userObject as? Row)?.expanded == true }
+                    .forEach { expandPath(e.path.pathByAddingChild(it)) }
+            }
+            override fun treeCollapsed(e: TreeExpansionEvent) {}
+        })
     }
 
-    /** Replaces the rows (on the EDT): expands every row, shows `placeholder` when there are none. */
-    fun show(rows: List<Row>, placeholder: String?) {
+    /** Replaces the rows (on the EDT): expands every row (`expandAll`, else none: the top rows stay
+     *  closed), shows `placeholder` when there are none. */
+    fun show(rows: List<Row>, placeholder: String?, expandAll: Boolean = true) {
         ApplicationManager.getApplication().invokeLater {
             root.removeAllChildren()
             rows.forEach { root.add(node(it)) }
             model.reload()
             tree.emptyText.text = placeholder ?: ""
-            TreeUtil.expandAll(tree)
+            if (expandAll) TreeUtil.expandAll(tree)
         }
     }
 

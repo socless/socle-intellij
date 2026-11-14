@@ -42,8 +42,11 @@ Unit and platform tests cannot run the server or JCEF, so two checks run against
 
 - **Headless (`e2e/run.sh`):** an isolated IntelliJ under Xvfb, with Socle, a driver plugin (`e2e/`),
   LSP4IJ and the Scala plugin, opens a Socle checkout, waits for `socle/tests`, runs View design on
-  `GcdSpec` and waits for `socle/openPanel`. It checks the server start, the test list and the view
-  run, not the panel's content: on some machines JCEF's native process does not start under Xvfb.
+  `GcdSpec` and waits for `socle/openPanel`. With a spec whose design has a hierarchy
+  (`SOCLE_E2E_SPEC=example/test/src/deephier/DeepSocSpec.scala`) it then navigates the panel from a
+  Hierarchy path and (a server of Socle 0.30.0 or later) by selecting an instance in the Classes tab.
+  It checks the server start, the test list and the view run, not the panel's content: on some
+  machines JCEF's native process does not start under Xvfb.
 
   ```bash
   ./gradlew buildPlugin :e2e:buildPlugin

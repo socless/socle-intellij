@@ -5,8 +5,9 @@
     <description><![CDATA[
     Chisel IDE support: a View design action on each ChiselSim test opens the elaborated design in a
     panel beside the editor, and the schematic follows your cursor. The Socle tool window lists the
-    project's tests (View design and Simulate on each), the design's instance hierarchy and the details
-    of the selection.
+    project's tests (View design and Simulate on each), the design's instance hierarchy, its classes
+    (the modules by Scala class, then by the constructor arguments they were built with) and the
+    details of the selection.
     <p>Needs the Scala plugin, LSP4IJ, Java 21 or newer, and a Mill project with ChiselSim tests.
     The plugin bundles the Socle language server.
     See <a href="https://github.com/socless/socle-intellij">socless/socle-intellij</a>.</p>

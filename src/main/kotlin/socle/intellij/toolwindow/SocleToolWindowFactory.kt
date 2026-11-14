@@ -6,7 +6,7 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.content.ContentFactory
 
-/** The Socle tool window: Tests, Hierarchy and Details. */
+/** The Socle tool window: Tests, Hierarchy, Classes and Details. */
 class SocleToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val parent = toolWindow.disposable
@@ -14,6 +14,7 @@ class SocleToolWindowFactory : ToolWindowFactory, DumbAware {
         val cm = toolWindow.contentManager
         cm.addContent(cf.createContent(TestsPanel(project, parent).component, "Tests", false))
         cm.addContent(cf.createContent(HierarchyPanel(project, parent).component, "Hierarchy", false))
+        cm.addContent(cf.createContent(ClassesPanel(project, parent).component, "Classes", false))
         cm.addContent(cf.createContent(DetailsPanel(project, parent).component, "Details", false))
     }
 }

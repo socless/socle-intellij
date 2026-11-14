@@ -10,8 +10,8 @@ import java.nio.charset.StandardCharsets
 
 /**
  * The tool window's pure model, ported from socle-vscode's `SidebarModel`: the `socle/tests` and
- * `socle-state` payloads, per-test run states and the rows of the three trees (Tests, Hierarchy,
- * Details). Payload reading is tolerant: a malformed part is skipped, never thrown.
+ * `socle-state` payloads, per-test run states and the rows of the four trees (Tests, Hierarchy,
+ * Classes, Details). Payload reading is tolerant: a malformed part is skipped, never thrown.
  */
 object SidebarModel {
     private fun obj(v: JsonElement?): JsonObject? = v as? JsonObject
@@ -97,7 +97,8 @@ object SidebarModel {
         }
     }
 
-    /** One tree row, independent of Swing: `icon` is a VS Code codicon id the tool window maps to an IDE icon. */
+    /** One tree row, independent of Swing: `icon` is a VS Code codicon id the tool window maps to an IDE icon.
+     *  `expanded`: an expandable row that opens with its parent (Classes); `path`: the instance it shows (Classes). */
     data class Row(
         val id: String,
         val label: String,
@@ -107,6 +108,8 @@ object SidebarModel {
         val contextValue: String = "",
         val expandable: Boolean = false,
         val children: List<Row> = emptyList(),
+        val expanded: Boolean = false,
+        val path: List<String> = emptyList(),
     )
 
     fun suiteRow(s: SuiteInfo, rootUri: String?): Row {
@@ -141,9 +144,18 @@ object SidebarModel {
                            val params: List<Triple<String, String, String>>, val ports: List<Triple<String, String, String>>,
                            val copies: Int = 0)
 
-    /** `designChanged` false: the message left the design as it was (the UI sends it only when it changes). */
+    /** The class view (Socle 0.30.0 and later send it with the design): a module class, its
+     *  parameterizations (the modules built with the same arguments), their instances. */
+    data class ClassInstance(val path: List<String>, val label: String, val module: String)
+    data class ClassParams(val label: String, val unknown: Boolean, val params: List<Triple<String, String, String>>,
+                           val instances: List<ClassInstance>)
+    data class ClassInfo(val scalaClass: String, val name: String, val library: Boolean, val modules: Int,
+                         val parameterizations: List<ClassParams>)
+
+    /** `designChanged` false: the message left the design as it was (the UI sends it only when it changes).
+     *  `classes` comes with the design: meaningful only when `designChanged` (empty from an older server). */
     data class UiState(val designChanged: Boolean, val design: DesignInfo?, val path: List<String>,
-                       val selection: String?, val details: DetailsInfo?)
+                       val selection: String?, val details: DetailsInfo?, val classes: List<ClassInfo> = emptyList())
 
     private fun parseModule(v: JsonElement): ModuleInfo? {
         val o = obj(v) ?: return null
@@ -188,7 +200,30 @@ object SidebarModel {
                 triples(x["params"], "name", "type", "value"), triples(x["ports"], "name", "dir", "type"),
                 int(x["copies"]) ?: 0)
         }
-        return UiState(designChanged, design, path, selection, details)
+        val classes = if (designChanged) arr(o["classes"])?.mapNotNull(::parseClass) ?: emptyList() else emptyList()
+        return UiState(designChanged, design, path, selection, details, classes)
+    }
+
+    private fun bool(v: JsonElement?): Boolean = (v as? JsonPrimitive)?.takeIf { it.isBoolean }?.asBoolean == true
+
+    // A malformed class, parameterization or instance is skipped.
+    private fun parseClass(v: JsonElement): ClassInfo? {
+        val o = obj(v) ?: return null
+        val sc = str(o["scalaClass"]) ?: return null
+        val ps = arr(o["parameterizations"]) ?: return null
+        return ClassInfo(sc, str(o["name"]) ?: sc.substringAfterLast('.'), bool(o["library"]), int(o["modules"]) ?: 0,
+            ps.mapNotNull { p ->
+                val x = obj(p) ?: return@mapNotNull null
+                val label = str(x["label"]) ?: return@mapNotNull null
+                val insts = arr(x["instances"]) ?: return@mapNotNull null
+                ClassParams(label, bool(x["unknown"]), triples(x["params"], "name", "type", "value"), insts.mapNotNull { i ->
+                    val y = obj(i) ?: return@mapNotNull null
+                    val path = arr(y["path"])?.map { str(it) ?: return@mapNotNull null }?.takeIf { it.isNotEmpty() }
+                        ?: return@mapNotNull null
+                    val l = str(y["label"]) ?: return@mapNotNull null
+                    ClassInstance(path, l, str(y["module"]) ?: "")
+                })
+            })
     }
 
     // ── Hierarchy ──
@@ -298,6 +333,33 @@ object SidebarModel {
                 Row("detail:port:$i", n, "$dir $t", "$n: $dir $t", icon)
             })
         return rows
+    }
+
+    // ── Classes ──
+
+    const val UNKNOWN_PARAMS = "some values could not be read: not compared"
+
+    /** The Classes view: a row per class (collapsed, its module count), under it a row per
+     *  parameterization (open, its instance count, `?` when not compared) and under that its
+     *  instances, a selection showing each. A class built only without parameters lists its
+     *  instances directly. Ids from the class, the parameterization's index and the path, as
+     *  two parameterizations may share a label. */
+    fun classRows(classes: List<ClassInfo>): List<Row> = classes.map { c ->
+        val cid = "class:${c.scalaClass}"
+        fun instances(pid: String, insts: List<ClassInstance>) = insts.map { i ->
+            val p = i.path.joinToString("/")
+            Row("$pid/$p", i.label, tooltip = "module ${i.module}\n$p", icon = "circuit-board", contextValue = "classInstance", path = i.path)
+        }
+        val single = c.parameterizations.singleOrNull()
+        val kids = if (single != null && single.params.isEmpty()) instances(cid, single.instances)
+        else c.parameterizations.mapIndexed { n, p ->
+            val pid = "$cid#$n"
+            Row(pid, if (p.unknown) "${p.label} ?" else p.label, p.instances.size.toString(),
+                if (p.unknown) UNKNOWN_PARAMS else "modules built with the same constructor arguments",
+                "symbol-parameter", "classParams", expandable = true, children = instances(pid, p.instances), expanded = true)
+        }
+        Row(cid, c.name, c.modules.toString(), c.scalaClass, if (c.library) "package" else "symbol-class", "class",
+            expandable = kids.isNotEmpty(), children = kids)
     }
 
     // ── editor side ──
