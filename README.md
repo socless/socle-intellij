@@ -3,8 +3,8 @@
 Chisel IDE support for Scala files: a Socle icon in the margin of each ChiselSim test offers
 **View design**, which opens the elaborated design in a panel beside the editor, and **Simulate**.
 The schematic follows your cursor, and a click on a box opens its code. The Socle tool window lists
-the project's tests (View design and Simulate on each), the design's instance hierarchy and the
-details of the selection.
+the project's tests (View design and Simulate on each), the design's instance hierarchy, its
+classes and the details of the selection.
 
 It is the IntelliJ counterpart of [Socle for VS Code](https://github.com/socless/socle-vscode): the
 same features, through the same Socle language server.
@@ -61,11 +61,16 @@ gear icon | Install Plugin from Disk. Each release bundles the language server o
      <img alt="The GCD schematic beside Surfer, showing x and y converge to 6" src="docs/images/02-waveforms-light.png">
    </picture>
 
-The **Socle** tool window (left) has three tabs:
+The **Socle** tool window (left) has four tabs:
 - **Tests:** the project's ChiselSim suites and tests with their state (shown, running, failed);
   View design and Simulate in the context menu, a double-click opens the test.
 - **Hierarchy:** the panel's instance tree; a selection takes the schematic there, Open Source in the
   context menu.
+- **Classes:** the design's modules by Scala class (your classes first, then library classes), then
+  by the constructor arguments they were built with (same arguments, one row; `?` when some value
+  could not be read, so those modules were not compared), then their instances; selecting an
+  instance takes the schematic there, as a Hierarchy row does. It needs the language server of
+  Socle 0.30.0 or later.
 - **Details:** what is selected in the schematic: its class, parameters and ports.
 
 <picture>
@@ -90,8 +95,8 @@ server jar take effect when the server restarts (Language Servers view, or reope
 - A tool window instead of the activity bar views.
 - The Surfer tab opens in a split to the right of the active editor (IntelliJ has no "column after
   the panel").
-- Without JCEF (an IDE run without it) the design opens in your browser, and the Hierarchy and
-  Details tabs stay empty.
+- Without JCEF (an IDE run without it) the design opens in your browser, and the Hierarchy, Classes
+  and Details tabs stay empty.
 
 ## Third-party software
 

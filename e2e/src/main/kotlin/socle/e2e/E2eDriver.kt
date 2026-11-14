@@ -5,9 +5,15 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.util.ui.tree.TreeUtil
 import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import javax.swing.JScrollPane
+import javax.swing.JTree
+import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreePath
 import socle.intellij.SidebarModel
 import socle.intellij.SocleEvents
 import socle.intellij.SocleProjectService
@@ -16,7 +22,9 @@ import socle.intellij.panel.SoclePanel
 /**
  * Drives one View design in a real IDE: opens SOCLE_E2E_SPEC (a test file relative to the project),
  * views its first test when the tests arrive, waits for the panel's UI state, navigates into the
- * first child instance, waits for that state, then exits. Each step is a line in SOCLE_E2E_OUT;
+ * first child instance, waits for that state, then (Socle 0.30.0 and later) logs the Classes rows,
+ * selects a class instance in the tool window's Classes tab, waits for that state, then exits.
+ * Each step is a line in SOCLE_E2E_OUT;
  * the last line is PASS or FAIL.
  */
 class E2eDriver : ProjectActivity {
@@ -50,6 +58,7 @@ class E2eDriver : ProjectActivity {
         val fileUri = File(project.basePath, spec).toPath().toUri().toString()
         var viewed = false
         var firstState: SidebarModel.UiState? = null
+        var classTarget: Pair<List<String>, String?>? = null
         project.messageBus.connect(service).subscribe(SocleEvents.TOPIC, object : SocleEvents {
             override fun suitesUpdated(suites: List<SidebarModel.SuiteInfo>) {
                 line("suites ${suites.map { it.suite }}")
@@ -75,8 +84,40 @@ class E2eDriver : ProjectActivity {
                         val (p, sel) = SidebarModel.navigateTarget(d, child)!!
                         SoclePanel.getInstance(project).navigate(SidebarModel.navigateMessage(p, sel))
                     }
+                } else if (classTarget != null) {
+                    val (p, sel) = classTarget!!
+                    if (state.path == p && (sel == null || state.selection == sel))
+                        finish(true, "Classes instance shown: path=${state.path} selection=${state.selection}")
                 } else if (firstState != null && state.path != firstState!!.path || state.selection != null) {
-                    finish(true, "navigated to ${state.path} selection=${state.selection}")
+                    line("navigated to ${state.path} selection=${state.selection}")
+                    // The Classes view (Socle 0.30.0 and later): its rows, then one of its instances selected
+                    // in the tool window's Classes tab, whose selection navigates the panel.
+                    val fd = firstState!!.design!!
+                    val rows = SidebarModel.classRows(firstState.classes)
+                    fun dump(rs: List<SidebarModel.Row>, depth: Int): Unit = rs.forEach {
+                        line("classes ${"  ".repeat(depth)}${it.label} (${it.description})${if (it.path.isEmpty()) "" else " -> ${it.path}"}")
+                        dump(it.children, depth + 1)
+                    }
+                    dump(rows, 0)
+                    fun all(rs: List<SidebarModel.Row>): List<SidebarModel.Row> = rs.flatMap { listOf(it) + all(it.children) }
+                    if (rows.isEmpty()) { finish(true, "no class view from this server (older than Socle 0.30.0)"); return }
+                    // An instance whose target is not where the schematic already is, so the move shows.
+                    val (inst, target) = all(rows).filter { it.path.isNotEmpty() }
+                        .map { it to (SidebarModel.navigateTarget(fd, it.path) ?: (it.path to null)) }
+                        .lastOrNull { it.second != (state.path to state.selection) }
+                        ?: run { finish(true, "every Classes instance is where the schematic is: Classes navigation not exercised"); return }
+                    classTarget = target
+                    ApplicationManager.getApplication().invokeLater {
+                        val content = ToolWindowManager.getInstance(project).getToolWindow("Socle")?.contentManager?.findContent("Classes")
+                        val tree = ((content?.component as? JScrollPane)?.viewport?.view as? JTree)
+                            ?: run { finish(false, "no Classes tab in the Socle tool window"); return@invokeLater }
+                        line("Classes tab: ${tree.rowCount} rows shown (classes closed)")
+                        val node = TreeUtil.findNode(tree.model.root as DefaultMutableTreeNode) {
+                            (it.userObject as? SidebarModel.Row)?.path == inst.path
+                        } ?: run { finish(false, "no Classes row for ${inst.path}"); return@invokeLater }
+                        line("select in the Classes tab ${inst.label} -> ${inst.path}")
+                        tree.selectionPath = TreePath(node.path)
+                    }
                 }
             }
         })
@@ -84,6 +125,8 @@ class E2eDriver : ProjectActivity {
             val vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(File(project.basePath, spec).path)
             if (vf == null) finish(false, "no file $spec") else FileEditorManager.getInstance(project).openFile(vf, true)
             line("opened $spec")
+            // The tool window's tabs follow the panel from their creation: open it before the design comes.
+            ToolWindowManager.getInstance(project).getToolWindow("Socle")?.show()
         }
     }
 }

@@ -13,8 +13,10 @@ tag (Verilator on the PATH for Simulate), and trust the project.
    the test's row says "shown".
 3. Move the cursor into another class of the file: the schematic highlights that class's boxes.
    Click a box: its code opens.
-4. Hierarchy and Details fill; selecting a Hierarchy row moves the schematic. Close the panel: both
-   empty. Tools | Socle | Show Design Panel reopens it on the same design.
+4. Hierarchy and Details fill; selecting a Hierarchy row moves the schematic. With a server of Socle
+   0.30.0 or later, Classes lists the design's classes: open one, its parameterizations are open,
+   and selecting an instance moves the schematic. Close the panel: all three empty. Tools | Socle |
+   Show Design Panel reopens it on the same design.
 5. Switch the IDE theme (light / dark): the panel follows without a reload.
 6. Simulate with the default viewer: the Surfer app opens on the trace.
 7. Set the wave viewer to `surfer-panel` (Settings | Tools | Socle), Simulate again: the Surfer tab

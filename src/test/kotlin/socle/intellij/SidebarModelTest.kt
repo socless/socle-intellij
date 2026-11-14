@@ -360,6 +360,101 @@ class SidebarModelTest {
         assertEquals(listOf(listOf("DeepSoc", "cluster0"), listOf("DeepSoc", "pipe")), SidebarModel.hierChildren(d, listOf("DeepSoc")))
     }
 
+    // ── classes ──
+
+    // Cluster: one parameterization; Core: only without parameters; Lane: two that could not be
+    // compared (the same label); then a library class.
+    private val withClasses = json(
+        """{"type":"socle-state","path":["DeepSoc"],"selection":null,"details":null,
+          | "design":{"top":"DeepSoc","modules":[{"name":"DeepSoc","children":[]}]},
+          | "classes":[
+          |  {"scalaClass":"deephier.Cluster","name":"Cluster","library":false,"modules":2,"parameterizations":[
+          |    {"label":"(nCores = 2)","unknown":false,"params":[{"name":"nCores","type":"Int","value":"2"}],"instances":[
+          |      {"path":["DeepSoc","cluster0"],"label":"cluster0","module":"Cluster"},
+          |      {"path":["DeepSoc","cluster1"],"label":"cluster1","module":"Cluster_1"}]}]},
+          |  {"scalaClass":"deephier.Core","name":"Core","library":false,"modules":2,"parameterizations":[
+          |    {"label":"(no parameters)","unknown":false,"params":[],"instances":[
+          |      {"path":["DeepSoc","cluster0","cores_0"],"label":"cluster0/cores_0","module":"Core"},
+          |      {"path":["DeepSoc","cluster0","cores_1"],"label":"cluster0/cores_1","module":"Core_1"}]}]},
+          |  {"scalaClass":"x.Lane","name":"Lane","library":false,"modules":2,"parameterizations":[
+          |    {"label":"(f = <unreadable>)","unknown":true,"params":[{"name":"f","type":"","value":"<unreadable>"}],
+          |     "instances":[{"path":["DeepSoc","l0"],"label":"l0","module":"Lane"}]},
+          |    {"label":"(f = <unreadable>)","unknown":true,"params":[{"name":"f","type":"","value":"<unreadable>"}],
+          |     "instances":[{"path":["DeepSoc","l1"],"label":"l1","module":"Lane_1"}]}]},
+          |  {"scalaClass":"chisel3.util.Queue","name":"Queue","library":true,"modules":1,"parameterizations":[
+          |    {"label":"(entries = 4)","unknown":false,"params":[{"name":"entries","type":"Int","value":"4"}],
+          |     "instances":[{"path":["DeepSoc","pipe"],"label":"pipe","module":"Queue4"}]}]}
+          | ]}""".trimMargin())
+    private val classRows get() = SidebarModel.classRows(SidebarModel.parseUiState(withClasses)!!.classes)
+    private fun all(rs: List<SidebarModel.Row>): List<SidebarModel.Row> = rs.flatMap { listOf(it) + all(it.children) }
+
+    @Test
+    fun classRowsAsDelivered() {
+        val rows = classRows
+        assertEquals(listOf("Cluster", "Core", "Lane", "Queue"), rows.map { it.label })
+        assertEquals(listOf("2", "2", "2", "1"), rows.map { it.description })
+        assertEquals("deephier.Cluster", rows[0].tooltip)
+        assertTrue(rows.all { it.expandable && !it.expanded })
+        assertEquals(listOf("symbol-class", "symbol-class", "symbol-class", "package"), rows.map { it.icon })
+    }
+
+    @Test
+    fun classParameterizationIsOpenWithItsInstances() {
+        val p = classRows[0].children.single()
+        assertEquals("(nCores = 2)", p.label); assertEquals("2", p.description); assertTrue(p.expandable && p.expanded)
+        assertEquals("modules built with the same constructor arguments", p.tooltip)
+        assertEquals(listOf("cluster0", "cluster1"), p.children.map { it.label })
+        val i = p.children[1]
+        assertEquals(listOf("DeepSoc", "cluster1"), i.path); assertEquals("module Cluster_1\nDeepSoc/cluster1", i.tooltip)
+        assertFalse(i.expandable)
+    }
+
+    @Test
+    fun classWithoutParametersListsItsInstancesDirectly() {
+        val core = classRows[1]
+        assertEquals(listOf("cluster0/cores_0", "cluster0/cores_1"), core.children.map { it.label })
+        assertEquals(listOf("cores_0", "cores_1"), core.children.map { it.path.last() })
+    }
+
+    @Test
+    fun classParameterizationNotComparedIsMarked() {
+        val lane = classRows[2].children
+        assertEquals(listOf("(f = <unreadable>) ?", "(f = <unreadable>) ?"), lane.map { it.label })
+        assertTrue(lane.all { it.tooltip == SidebarModel.UNKNOWN_PARAMS }); assertEquals(listOf("1", "1"), lane.map { it.description })
+    }
+
+    @Test
+    fun classRowIdsAreDistinctAndOnlyInstancesNavigate() {
+        val ids = all(classRows).map { it.id }
+        assertEquals(ids.size, ids.distinct().size)
+        assertEquals(listOf("cluster0", "cluster1", "cluster0/cores_0", "cluster0/cores_1", "l0", "l1", "pipe"),
+            all(classRows).filter { it.path.isNotEmpty() }.map { it.label })
+    }
+
+    @Test
+    fun olderServerOrNoDesignGivesNoClassView() {
+        assertEquals(emptyList<Any>(), SidebarModel.parseUiState(state)!!.classes)
+        assertEquals(emptyList<Any>(), SidebarModel.classRows(emptyList()))
+        assertEquals(emptyList<Any>(),
+            SidebarModel.parseUiState(json("""{"type":"socle-state","design":null,"path":[],"selection":null,"details":null}"""))!!.classes)
+    }
+
+    @Test
+    fun malformedClassEntriesAreSkippedAndTheStateKept() {
+        val u = SidebarModel.parseUiState(json(
+            """{"type":"socle-state","path":["T"],"selection":null,"details":null,
+              | "design":{"top":"T","modules":[{"name":"T","children":[]}]},
+              | "classes":[7,{"name":"NoClass"},{"scalaClass":"a.A","library":"true","parameterizations":[
+              |   3,{"label":"(no parameters)","unknown":"yes","params":[],"instances":[{"path":[],"label":"x"},{"path":["T",1],"label":"y"},
+              |     {"path":["T","ok"],"label":"ok"}]}]}]}""".trimMargin()))!!
+        assertEquals("T", u.design!!.top); assertEquals(listOf("T"), u.path)
+        assertEquals(listOf(SidebarModel.ClassInfo("a.A", "A", false, 0,
+            listOf(SidebarModel.ClassParams("(no parameters)", false, emptyList(),
+                listOf(SidebarModel.ClassInstance(listOf("T", "ok"), "ok", "")))))), u.classes)
+        assertEquals(emptyList<Any>(), SidebarModel.parseUiState(json(
+            """{"type":"socle-state","path":[],"selection":null,"details":null,"design":{"top":"T","modules":[]},"classes":"x"}"""))!!.classes)
+    }
+
     // ── editor side ──
 
     @Test

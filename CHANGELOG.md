@@ -7,6 +7,14 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+### Added
+
+- The Classes tab of the tool window, after Hierarchy: the design's modules by Scala class (user
+  classes first, then library classes), then by parameterization (the modules built with the same
+  arguments, `?` when some value could not be read), then their instances; selecting an instance
+  shows it in the schematic, as a Hierarchy row does. Needs the language server of Socle 0.30.0 or
+  later (an older one sends no class view: the tab says how to get one).
+
 ## [0.4.0] - 2026-11-14
 
 Bundles the language server of Socle 0.29.0.
