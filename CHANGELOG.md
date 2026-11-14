@@ -12,8 +12,14 @@ release whose language server it bundles.
 - The Classes tab of the tool window, after Hierarchy: the design's modules by Scala class (user
   classes first, then library classes), then by parameterization (the modules built with the same
   arguments, `?` when some value could not be read), then their instances; selecting an instance
-  shows it in the schematic, as a Hierarchy row does. Needs the language server of Socle 0.30.0 or
-  later (an older one sends no class view: the tab says how to get one).
+  shows it in the schematic, as a Hierarchy row does. The bundled server of Socle 0.30.0 sends the
+  class view; a server jar older than that set in the settings sends none (the tab says how to get
+  one).
+
+### Changed
+
+- The bundled server, from Socle 0.30.0: `socle-state` carries the class view the Classes tab
+  shows.
 
 ## [0.4.0] - 2026-11-14
 

@@ -69,8 +69,8 @@ The **Socle** tool window (left) has four tabs:
 - **Classes:** the design's modules by Scala class (your classes first, then library classes), then
   by the constructor arguments they were built with (same arguments, one row; `?` when some value
   could not be read, so those modules were not compared), then their instances; selecting an
-  instance takes the schematic there, as a Hierarchy row does. It needs the language server of
-  Socle 0.30.0 or later.
+  instance takes the schematic there, as a Hierarchy row does. The class view comes from the
+  bundled server (Socle 0.30.0 or later).
 - **Details:** what is selected in the schematic: its class, parameters and ports.
 
 <picture>
