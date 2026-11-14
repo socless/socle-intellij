@@ -7,6 +7,10 @@ release whose language server it bundles.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-14
+
+Bundles the language server of Socle 0.30.0.
+
 ### Added
 
 - The Classes tab of the tool window, after Hierarchy: the design's modules by Scala class (user
